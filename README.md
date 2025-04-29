@@ -1,16 +1,38 @@
-# myapp
+# 🧾 Flutter Invoice App
 
-A new Flutter project.
+A modern, cross-platform Flutter application for managing invoices. Supports dark mode, PDF generation, and invoice archiving. Designed for both web and mobile platforms.
 
-## Getting Started
+## ✨ Features
 
-This project is a starting point for a Flutter application.
+- 📄 Create, edit, delete invoices
+- 📂 Archive invoices (soft delete)
+- 🌙 Light/Dark theme toggle
+- 🖨️ Print invoices (web and mobile)
+- 📥 Download invoices as PDF
+- 🔐 Local data storage (persistent)
+- 🎨 Clean UI using Material Design
+- 📆 Date formatting using `intl`
 
-A few resources to get you started if this is your first Flutter project:
+## 🖥️ Screens
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Invoice List Screen**: View, edit, archive, print, or delete invoices
+- **Invoice Entry Screen**: Add or edit invoice details
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📦 Dependencies
+
+| Package            | Purpose                           |
+|--------------------|-----------------------------------|
+| `flutter_slidable` | Swipe actions (archive/delete)    |
+| `printing`         | PDF generation & printing         |
+| `intl`             | Date formatting                   |
+| `uuid`             | Unique invoice IDs                |
+| `path_provider`    | Local storage paths               |
+| `shared_preferences` | Save theme mode & app settings |
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Magatijoel9620/invoice_app_flutter.git
+cd invoice_app_flutter
