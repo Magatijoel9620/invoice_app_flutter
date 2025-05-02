@@ -10,9 +10,6 @@ import '../services/invoice_storage_service.dart';
 import '../utils/invoice_pdf.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'dart:html' as html show AnchorElement, Blob, Url; // Import only used classes
-
-
 import 'package:printing/printing.dart'; // Still used for native/mobile
 
 class InvoiceListScreen extends StatefulWidget {
@@ -273,16 +270,7 @@ Widget build(BuildContext context) {
 Future<void> _printInvoice(Invoice invoice) async {
   try {
     final pdf = await generateInvoicePdf(invoice);
-    if (kIsWeb) {      
-       // Conditional import and usage for web-only code
-        final blob = html.Blob([pdf], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        html.AnchorElement(href: url)
-          ..setAttribute('download', 'Invoice-${invoice.invoiceNumber}.pdf')
-          ..style.display = 'none'
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
+    if (!kIsWeb) {
 
     } else {
       await Printing.layoutPdf(onLayout: (_) => pdf);
@@ -296,15 +284,7 @@ Future<void> _downloadInvoice(Invoice invoice) async {
   try {
     final pdf = await generateInvoicePdf(invoice);
     final name = 'Invoice-${invoice.invoiceNumber}.pdf';
-    if (kIsWeb) {
-       // Conditional import and usage for web-only code
-        final blob = html.Blob([pdf], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        html.AnchorElement(href: url)
-          ..setAttribute('download', name)
-          ..style.display = 'none'
-          ..click();
-        html.Url.revokeObjectUrl(url);
+    if (!kIsWeb) {
     } else {
       await Printing.sharePdf(bytes: pdf, filename: name);
     }
