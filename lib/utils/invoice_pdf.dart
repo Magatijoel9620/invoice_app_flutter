@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart';
+import 'package:pdf/pdf.dart'; // Make sure this imports your updated Invoice model
 import '../models/invoice.dart'; // Make sure this imports your updated Invoice model
 
 Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
@@ -66,7 +66,7 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
             pw.SizedBox(height: 8),
 
             // Table for line items
-            pw.Table.fromTextArray(
+            pw.TableHelper.fromTextArray(
               headers: ['#', 'Description', 'Quantity', 'Unit Price', 'Total'],
               data: List.generate(invoice.lineItems.length, (index) {
                 final item = invoice.lineItems[index];

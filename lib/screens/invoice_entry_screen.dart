@@ -131,6 +131,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
       );
 
       try {
+         BuildContext currentContext = context;
         if (widget.existingInvoice == null) {
           await InvoiceStorageService.saveInvoice(invoice);
         } else {
@@ -140,7 +141,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
           );
         }
 
-        Navigator.pushReplacement(
+       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => InvoiceListScreen(
@@ -149,13 +150,13 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
             ),
           ),
         );
-
-        ScaffoldMessenger.of(context).showSnackBar(
+        if(currentContext.mounted){
+          ScaffoldMessenger.of(currentContext).showSnackBar(
           const SnackBar(content: Text('Invoice saved successfully')),
         );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving invoice: $e')),
+          SnackBar(content: Text('Error saving invoice: $e',)
         );
       }
     } else {
@@ -234,9 +235,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
               const SizedBox(height: 24),
               ...lineItems
                   .asMap()
-                  .entries
-                  .map((entry) => _buildLineItem(entry.key, entry.value))
-                  .toList(),
+                  .entries.map((entry) => _buildLineItem(entry.key, entry.value)),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
@@ -248,7 +247,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
               ),
               const SizedBox(height: 20),
               Card(
-                color: Theme.of(context).colorScheme.surfaceVariant,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(

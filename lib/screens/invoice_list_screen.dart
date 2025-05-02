@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element, duplicate_import, avoid_web_libraries_in_flutter
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:printing/printing.dart';
@@ -219,7 +221,10 @@ Widget build(BuildContext context) {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Icons.receipt, color: theme.colorScheme.primary),
+                      child: Icon(Icons.receipt, color: theme.colorScheme.primary.withValues(
+                        
+                      )
+                      ,),
                     ),
                     title: Text(
                       invoice.clientName,
