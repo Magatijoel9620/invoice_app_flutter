@@ -153,128 +153,139 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
       ),
     ).then((_) => _loadInvoices());
   }
-@override
-Widget build(BuildContext context) {
-  final theme = Theme.of(context);
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('Invoices'),
-      actions: [
-        IconButton(icon: const Icon(Icons.refresh), onPressed: _loadInvoices),
-        IconButton(
-          icon: Icon(
-            widget.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Invoices'),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadInvoices),
+          IconButton(
+            icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: widget.toggleTheme,
           ),
-          onPressed: widget.toggleTheme,
-        ),
-      ],
-    ),
-    body: _invoices.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.receipt_long, size: 64, color: theme.colorScheme.primary),
-                const SizedBox(height: 16),
-                Text(
-                  'No invoices yet!',
-                  style: theme.textTheme.titleMedium,
-                ),
-              ],
-            ),
-          )
-        : ListView.separated(
-            itemCount: _invoices.length,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final invoice = _invoices[index];
-              return Slidable(
-                key: Key(invoice.invoiceNumber),
-                endActionPane: ActionPane(
-                  motion: const DrawerMotion(),
+        ],
+      ),
+      body:
+          _invoices.isEmpty
+              ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SlidableAction(
-                      onPressed: (_) => _showArchiveConfirmationDialog(index),
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      icon: Icons.archive,
-                      label: 'Archive',
+                    Icon(
+                      Icons.receipt_long,
+                      size: 64,
+                      color: theme.colorScheme.primary,
                     ),
-                    SlidableAction(
-                      onPressed: (_) => _showDeleteConfirmationDialog(index),
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      icon: Icons.delete,
-                      label: 'Delete',
+                    const SizedBox(height: 16),
+                    Text(
+                      'No invoices yet!',
+                      style: theme.textTheme.titleMedium,
                     ),
                   ],
                 ),
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Icons.receipt, color: theme.colorScheme.primary.withValues(
-                        
-                      )
-                      ,),
-                    ),
-                    title: Text(
-                      invoice.clientName,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Invoice #: ${invoice.invoiceNumber}'),
-                          Text('Date: ${DateFormat('yyyy-MM-dd').format(invoice.date)}'),
-                        ],
-                      ),
-                    ),
-                    isThreeLine: true,
-                    trailing: Wrap(
-                      spacing: 8,
+              )
+              : ListView.separated(
+                itemCount: _invoices.length,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final invoice = _invoices[index];
+                  return Slidable(
+                    key: Key(invoice.invoiceNumber),
+                    endActionPane: ActionPane(
+                      motion: const DrawerMotion(),
                       children: [
-                        IconButton(
-                          tooltip: 'Print',
-                          icon: const Icon(Icons.print),
-                          onPressed: () => _printInvoice(invoice),
+                        SlidableAction(
+                          onPressed:
+                              (_) => _showArchiveConfirmationDialog(index),
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          icon: Icons.archive,
+                          label: 'Archive',
                         ),
-                        IconButton(
-                          tooltip: 'Download',
-                          icon: const Icon(Icons.download),
-                          onPressed: () => _downloadInvoice(invoice),
-                        ),
-                        IconButton(
-                          tooltip: 'Edit',
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _editInvoice(invoice),
+                        SlidableAction(
+                          onPressed:
+                              (_) => _showDeleteConfirmationDialog(index),
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          icon: Icons.delete,
+                          label: 'Delete',
                         ),
                       ],
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
-  );
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primary
+                              .withOpacity(0.1),
+                          child: Icon(
+                            Icons.receipt,
+                            color: theme.colorScheme.primary.withValues(),
+                          ),
+                        ),
+                        title: Text(
+                          invoice.clientName,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Invoice #: ${invoice.invoiceNumber}'),
+                              Text(
+                                'Date: ${DateFormat('yyyy-MM-dd').format(invoice.date)}',
+                              ),
+                            ],
+                          ),
+                        ),
+                        isThreeLine: true,
+                        trailing: Wrap(
+                          spacing: 8,
+                          children: [
+                            IconButton(
+                              tooltip: 'Print',
+                              icon: const Icon(Icons.print),
+                              onPressed: () => _printInvoice(invoice),
+                            ),
+                            IconButton(
+                              tooltip: 'Download',
+                              icon: const Icon(Icons.download),
+                              onPressed: () => _downloadInvoice(invoice),
+                            ),
+                            IconButton(
+                              tooltip: 'Edit',
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _editInvoice(invoice),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+    );
+  }
 }
 
-  }
 Future<void> _printInvoice(Invoice invoice) async {
   try {
     final pdf = await generateInvoicePdf(invoice);
-    if (!kIsWeb) {
 
-    } else {
-      await Printing.layoutPdf(onLayout: (_) => pdf);
-    }
+    await Printing.layoutPdf(
+      onLayout: (_) async => pdf,
+    ); // Works on mobile and web!
   } catch (e) {
     print('Print error: $e');
   }
@@ -284,11 +295,37 @@ Future<void> _downloadInvoice(Invoice invoice) async {
   try {
     final pdf = await generateInvoicePdf(invoice);
     final name = 'Invoice-${invoice.invoiceNumber}.pdf';
-    if (!kIsWeb) {
-    } else {
-      await Printing.sharePdf(bytes: pdf, filename: name);
-    }
+
+    await Printing.sharePdf(
+      bytes: pdf,
+      filename: name,
+    ); // Works on mobile and web!
   } catch (e) {
     print('Download error: $e');
   }
 }
+// Future<void> _printInvoice(Invoice invoice) async {
+//   try {
+//     final pdf = await generateInvoicePdf(invoice);
+//     if (!kIsWeb) {
+
+//     } else {
+//       await Printing.layoutPdf(onLayout: (_) => pdf);
+//     }
+//   } catch (e) {
+//     print('Print error: $e');
+//   }
+// }
+
+// Future<void> _downloadInvoice(Invoice invoice) async {
+//   try {
+//     final pdf = await generateInvoicePdf(invoice);
+//     final name = 'Invoice-${invoice.invoiceNumber}.pdf';
+//     if (!kIsWeb) {
+//     } else {
+//       await Printing.sharePdf(bytes: pdf, filename: name);
+//     }
+//   } catch (e) {
+//     print('Download error: $e');
+//   }
+// }
