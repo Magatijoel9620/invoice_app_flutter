@@ -111,72 +111,82 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: SingleChildScrollView(
             // 🛠 Add this wrapper
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 40.0,
-                ), // Optional spacing
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.receipt_long_rounded,
-                      size: 80,
-                      color: widget.isDarkMode ? Colors.white : Colors.blueGrey,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Welcome to InvoiceEasy',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Create and manage invoices with ease.',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 30),
-                    Wrap(
-                      spacing: 20,
-                      runSpacing: 20,
-                      alignment: WrapAlignment.center,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              child: IntrinsicHeight(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 40.0,
+                    ), // Optional spacing
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildHomeCard(
-                          icon: Icons.list_alt,
-                          title: 'View Invoices',
-                          color: Colors.teal,
-                          onTap:
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => InvoiceListScreen(
-                                        isDarkMode: widget.isDarkMode,
-                                        toggleTheme: widget.toggleTheme,
-                                      ),
-                                    ),
-                              ),
+                        Icon(
+                          Icons.receipt_long_rounded,
+                          size: 80,
+                          color:
+                              widget.isDarkMode
+                                  ? Colors.white
+                                  : Colors.blueGrey,
                         ),
-                        _buildHomeCard(
-                          icon: Icons.note_add,
-                          title: 'New Invoice',
-                          color: Colors.indigo,
-                          onTap:
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => InvoiceEntryScreen(
-                                        isDarkMode: widget.isDarkMode,
-                                        toggleTheme: widget.toggleTheme,
-                                      ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Welcome to InvoiceEasy',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Create and manage invoices with ease.',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 30),
+                        Wrap(
+                          spacing: 20,
+                          runSpacing: 20,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            _buildHomeCard(
+                              icon: Icons.list_alt,
+                              title: 'View Invoices',
+                              color: Colors.teal,
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => InvoiceListScreen(
+                                            isDarkMode: widget.isDarkMode,
+                                            toggleTheme: widget.toggleTheme,
+                                          ),
                                     ),
-                              ),
+                                  ),
+                            ),
+                            _buildHomeCard(
+                              icon: Icons.note_add,
+                              title: 'New Invoice',
+                              color: Colors.indigo,
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => InvoiceEntryScreen(
+                                            isDarkMode: widget.isDarkMode,
+                                            toggleTheme: widget.toggleTheme,
+                                          ),
+                                    ),
+                                  ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

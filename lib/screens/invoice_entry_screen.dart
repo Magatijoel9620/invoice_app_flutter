@@ -58,15 +58,17 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
 
   void _addLineItem() {
     setState(() {
-      lineItems.add(LineItem(
-        description: '',
-        quantity: 1,
-        unitPrice: 0.0,
-        total: 0.0,
-        descriptionController: TextEditingController(),
-        quantityController: TextEditingController(text: '1'),
-        unitPriceController: TextEditingController(text: '0.0'),
-      ));
+      lineItems.add(
+        LineItem(
+          description: '',
+          quantity: 1,
+          unitPrice: 0.0,
+          total: 0.0,
+          descriptionController: TextEditingController(),
+          quantityController: TextEditingController(text: '1'),
+          unitPriceController: TextEditingController(text: '0.0'),
+        ),
+      );
     });
   }
 
@@ -121,7 +123,8 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
       }
 
       final invoice = Invoice(
-        id: widget.existingInvoice?.id ??
+        id:
+            widget.existingInvoice?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
         clientName: _clientNameController.text,
         invoiceNumber: _invoiceNumberController.text,
@@ -131,7 +134,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
       );
 
       try {
-         BuildContext currentContext = context;
+        BuildContext currentContext = context;
         if (widget.existingInvoice == null) {
           await InvoiceStorageService.saveInvoice(invoice);
         } else {
@@ -141,23 +144,23 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
           );
         }
 
-       Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => InvoiceListScreen(
-              isDarkMode: widget.isDarkMode,
-              toggleTheme: widget.toggleTheme,
-            ),
+            builder:
+                (context) => InvoiceListScreen(
+                  isDarkMode: widget.isDarkMode,
+                  toggleTheme: widget.toggleTheme,
+                ),
           ),
         );
-        if(currentContext.mounted){
+        if (currentContext.mounted) {
           ScaffoldMessenger.of(currentContext).showSnackBar(
-          const SnackBar(content: Text('Invoice saved successfully')),
-        );
+            const SnackBar(content: Text('Invoice saved successfully')),
+          );
         }
       } catch (e) {
-          SnackBar(content: Text('Error saving invoice: $e',)
-        );
+        SnackBar(content: Text('Error saving invoice: $e'));
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -203,8 +206,11 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                           prefixIcon: Icon(Icons.person),
                           border: OutlineInputBorder(),
                         ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                        validator:
+                            (value) =>
+                                value == null || value.isEmpty
+                                    ? 'Required'
+                                    : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -214,8 +220,11 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                           prefixIcon: Icon(Icons.numbers),
                           border: OutlineInputBorder(),
                         ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
+                        validator:
+                            (value) =>
+                                value == null || value.isEmpty
+                                    ? 'Required'
+                                    : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -233,9 +242,9 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              ...lineItems
-                  .asMap()
-                  .entries.map((entry) => _buildLineItem(entry.key, entry.value)),
+              ...lineItems.asMap().entries.map(
+                (entry) => _buildLineItem(entry.key, entry.value),
+              ),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
@@ -253,10 +262,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Total:',
-                        style: TextStyle(fontSize: 18),
-                      ),
+                      const Text('Total:', style: TextStyle(fontSize: 18)),
                       Text(
                         '\$${_totalAmount.toStringAsFixed(2)}',
                         style: const TextStyle(
@@ -288,63 +294,163 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
   }
 
   Widget _buildLineItem(int index, LineItem item) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: TextFormField(
-                controller: item.descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) => item.description = value,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                controller: item.quantityController,
-                decoration: const InputDecoration(
-                  labelText: 'Qty',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  item.quantity = int.tryParse(value) ?? 1;
-                  _updateTotal();
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                controller: item.unitPriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Price',
-                  prefixText: '\$',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  item.unitPrice = double.tryParse(value.replaceAll(',', '.')) ?? 0;
-                  _updateTotal();
-                },
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_forever, color: Colors.red),
-              onPressed: () => _removeLineItem(index),
-            ),
-          ],
-        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isMobile = constraints.maxWidth < 600;
+
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child:
+                isMobile
+                    ? Column(
+                      children: [
+                        _buildDescriptionField(item),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(child: _buildQtyField(item)),
+                            const SizedBox(width: 8),
+                            Expanded(child: _buildPriceField(item)),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_forever,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _removeLineItem(index),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                    : Row(
+                      children: [
+                        Expanded(flex: 3, child: _buildDescriptionField(item)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildQtyField(item)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildPriceField(item)),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_forever,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => _removeLineItem(index),
+                        ),
+                      ],
+                    ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDescriptionField(LineItem item) {
+    return TextFormField(
+      controller: item.descriptionController,
+      decoration: const InputDecoration(
+        labelText: 'Description',
+        border: OutlineInputBorder(),
       ),
+      onChanged: (value) => item.description = value,
+    );
+  }
+
+  Widget _buildQtyField(LineItem item) {
+    return TextFormField(
+      controller: item.quantityController,
+      decoration: const InputDecoration(
+        labelText: 'Qty',
+        border: OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.number,
+      onChanged: (value) {
+        item.quantity = int.tryParse(value) ?? 1;
+        _updateTotal();
+      },
+    );
+  }
+
+  Widget _buildPriceField(LineItem item) {
+    return TextFormField(
+      controller: item.unitPriceController,
+      decoration: const InputDecoration(
+        labelText: 'Price',
+        prefixText: '\$',
+        border: OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.number,
+      onChanged: (value) {
+        item.unitPrice = double.tryParse(value.replaceAll(',', '.')) ?? 0;
+        _updateTotal();
+      },
     );
   }
 }
+
+//   Widget _buildLineItem(int index, LineItem item) {
+//     return Card(
+//       margin: const EdgeInsets.symmetric(vertical: 8),
+//       elevation: 2,
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+//       child: Padding(
+//         padding: const EdgeInsets.all(12),
+//         child: Row(
+//           children: [
+//             Expanded(
+//               flex: 3,
+//               child: TextFormField(
+//                 controller: item.descriptionController,
+//                 decoration: const InputDecoration(
+//                   labelText: 'Description',
+//                   border: OutlineInputBorder(),
+//                 ),
+//                 onChanged: (value) => item.description = value,
+//               ),
+//             ),
+//             const SizedBox(width: 8),
+//             Expanded(
+//               child: TextFormField(
+//                 controller: item.quantityController,
+//                 decoration: const InputDecoration(
+//                   labelText: 'Qty',
+//                   border: OutlineInputBorder(),
+//                 ),
+//                 keyboardType: TextInputType.number,
+//                 onChanged: (value) {
+//                   item.quantity = int.tryParse(value) ?? 1;
+//                   _updateTotal();
+//                 },
+//               ),
+//             ),
+//             const SizedBox(width: 8),
+//             Expanded(
+//               child: TextFormField(
+//                 controller: item.unitPriceController,
+//                 decoration: const InputDecoration(
+//                   labelText: 'Price',
+//                   prefixText: '\$',
+//                   border: OutlineInputBorder(),
+//                 ),
+//                 keyboardType: TextInputType.number,
+//                 onChanged: (value) {
+//                   item.unitPrice = double.tryParse(value.replaceAll(',', '.')) ?? 0;
+//                   _updateTotal();
+//                 },
+//               ),
+//             ),
+//             IconButton(
+//               icon: const Icon(Icons.delete_forever, color: Colors.red),
+//               onPressed: () => _removeLineItem(index),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
