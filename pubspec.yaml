@@ -42,6 +42,12 @@ dependencies:
   universal_html: ^2.2.2
 
 dev_dependencies:
+# flutter_launcher_icons: ^0.13.1
+# flutter_icons:
+#   android: true
+#   ios: true
+#   image_path: "assets/images/InvoiceEasy_Logo.png"
+
   flutter_test:
     sdk: flutter
 
