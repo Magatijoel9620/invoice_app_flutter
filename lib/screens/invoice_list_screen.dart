@@ -169,29 +169,64 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
     );
   }
 
+  // In your _InvoiceListScreenState class
+
   Future<void> _handleArchiveInvoice(int index) async {
-    if (index < 0 || index >= _invoices.length) return;
+    if (!mounted || index < 0 || index >= _invoices.length) return;
     final invoiceToArchive = _invoices[index];
-    // TODO: Implement actual archive logic
+    final currentContext = context; // Capture context for use across async gap
+
     await _showConfirmationDialog(
-      context: context,
+      context: currentContext,
       title: 'Confirm Archive',
-      content: 'Are you sure you want to archive invoice "${invoiceToArchive.invoiceNumber}"?',
+      content: 'Are you sure you want to archive invoice "${invoiceToArchive.invoiceNumber}" for ${invoiceToArchive.clientName}?',
       confirmButtonText: 'Archive',
-      confirmButtonColor: Colors.orange.shade700,
-      onConfirm: () {
-        // Placeholder: Implement actual archiving logic
-        // e.g., invoiceToArchive.isArchived = true; InvoiceStorageService.updateInvoice(invoiceToArchive);
-        // Then filter archived invoices from the main list or move them.
-        setState(() {
-          // For now, just simulate by removing from this active list
-          _invoices.removeAt(index);
-        });
-        _showSuccessSnackBar('Invoice "${invoiceToArchive.invoiceNumber}" archived (simulation).');
-        // _loadInvoices(showLoadingIndicator: false); // Refresh list if archiving changes data source
+      confirmButtonColor: Colors.orange.shade700, // Or use Theme.of(currentContext).colorScheme.tertiary
+      onConfirm: () async {
+        // Create an updated invoice instance marked as archived
+        // Using copyWith is clean for this:
+        final archivedInvoice = invoiceToArchive.copyWith(isArchived: true);
+
+        // Optimistically remove from the UI immediately for responsiveness
+        if (mounted) {
+          setState(() {
+            _invoices.removeAt(index);
+          });
+        }
+
+        try {
+          // Persist the change to storage
+          await InvoiceStorageService.updateInvoice(archivedInvoice);
+
+          if (mounted) {
+            _showSuccessSnackBar('Invoice "${invoiceToArchive.invoiceNumber}" archived successfully.');
+          }
+          // No need to call _loadInvoices() here if the optimistic update
+          // and filtering in getActiveInvoices() works correctly.
+          // If you were to navigate to an archive screen, you might refresh that list.
+
+        } catch (e) {
+          if (mounted) {
+            _showErrorSnackBar('Failed to archive invoice: $e');
+            // If the storage update fails, revert the UI change
+            // This requires careful handling if the list could have changed
+            // in other ways in the meantime. A simple revert might be:
+            setState(() {
+              // Re-insert the original invoice if the operation failed.
+              // This assumes the list hasn't been drastically reordered.
+              // For more complex scenarios, you might need to reload or find by ID.
+              if (index <= _invoices.length) { // Check bounds before inserting
+                _invoices.insert(index, invoiceToArchive);
+              } else {
+                _invoices.add(invoiceToArchive); // Fallback if index is out of bounds
+              }
+            });
+          }
+        }
       },
     );
   }
+
 
   void _navigateToEditInvoice(Invoice invoice) {
     Navigator.push(
