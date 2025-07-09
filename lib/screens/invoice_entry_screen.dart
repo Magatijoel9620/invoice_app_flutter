@@ -68,8 +68,10 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
   final _invoiceNumberController = TextEditingController();
   final _dateController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
-
+  //final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+      locale: 'sw_KE', symbol: 'Ksh ' // Optionally, you can explicitly set the symbol if needed
+  );
   List<LineItemUIData> _lineItemUIList = [];
   double _totalAmount = 0.0;
   bool _isLoading = false;
@@ -454,8 +456,8 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    child: const Text('Cancel'),
-                    onPressed: _isLoading ? null : () => Navigator.pop(context), // Dismiss without saving
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Cancel'), // Dismiss without saving
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
@@ -591,6 +593,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                     controller: itemData.unitPriceController,
                     labelText: 'Unit Price',
                     prefixIcon: Icons.attach_money,
+                   // prefixText: 'Ksh ',
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
                     validator: (v) => (double.tryParse(v!.replaceAll(',', '.')) ?? -1) < 0 ? 'Invalid' : null,
@@ -651,7 +654,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: theme.colorScheme.primary.withOpacity(0.8)) : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
         filled: true,
-        fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3), // Slightly different fill
+        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3), // Slightly different fill
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // Adjusted padding
       ),
       style: theme.textTheme.bodyLarge,

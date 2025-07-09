@@ -1,14 +1,17 @@
 // ignore_for_file: unused_element, avoid_web_libraries_in_flutter
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
+import 'package:universal_html/html.dart' as html;
 // Keep for conditional PDF logic if needed
 
 import '../models/invoice.dart';
 import '../screens/invoice_entry_screen.dart';
 import '../services/invoice_storage_service.dart';
+import '../services/pdf_settings_service.dart';
 import '../utils/invoice_pdf.dart';
 
 // Removed duplicate import of printing/printing.dart
@@ -38,8 +41,11 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
   String? _errorMessage;
   final DateFormat _dateFormat = DateFormat('MMM dd, yyyy');
   // For currency formatting, ensure 'intl' package is correctly imported and used
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$'); // Adjust locale & symbol
-
+  //final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$'); // Adjust locale & symbol
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+      locale: 'sw_KE', symbol: 'Ksh ' // Optionally, you can explicitly set the symbol if needed
+  );
+      final PdfSettingsService _settingsService = PdfSettingsService();
   @override
   void initState() {
     super.initState();
@@ -227,6 +233,79 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
     );
   }
 
+  Future<void> _printInvoice(Invoice invoice) async {
+    try {
+      // 1. Load PDF settings
+      final pdfSettings = await _settingsService.loadSettings();
+
+      // 2. Generate PDF with loaded settings
+      final pdfBytes = await generateInvoicePdf(invoice, pdfSettings); // PASS SETTINGS HERE
+
+      // 3. Platform-specific print/download logic
+      if (kIsWeb) {
+        // Ensure 'html' is properly accessed, often via a conditional import or alias
+        final blob = html.Blob([pdfBytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', 'Invoice-${invoice.invoiceNumber}.pdf')
+          ..style.display = 'none';
+        html.document.body?.append(anchor); // Append to body to ensure it's clickable
+        anchor.click();
+        html.Url.revokeObjectUrl(url);
+        anchor.remove(); // Clean up the anchor element
+      } else {
+        await Printing.layoutPdf(
+          onLayout: (format) async => pdfBytes, // Use the generated pdfBytes
+          name: 'Invoice-${invoice.invoiceNumber}.pdf', // Added name for consistency
+        );
+      }
+    } catch (e) {
+      print('Print error: $e');
+      // Consider showing a user-friendly error message, e.g., via a SnackBar
+      // _showErrorSnackBar('Print error: $e');
+    }
+  }
+
+  Future<void> _downloadInvoice(Invoice invoice) async {
+    try {
+      // 1. Load PDF settings
+      final pdfSettings = await _settingsService.loadSettings();
+
+      // 2. Generate PDF with loaded settings
+      final pdfBytes = await generateInvoicePdf(invoice, pdfSettings); // PASS SETTINGS HERE
+
+      // 3. Platform-specific download/share logic
+      final name = 'Invoice-${invoice.invoiceNumber}.pdf';
+      if (kIsWeb) {
+        // Ensure 'html' is properly accessed
+        final blob = html.Blob([pdfBytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', name)
+          ..style.display = 'none';
+        html.document.body?.append(anchor);
+        anchor.click();
+        html.Url.revokeObjectUrl(url);
+        anchor.remove();
+      } else {
+        await Printing.sharePdf(bytes: pdfBytes, filename: name);
+      }
+    } catch (e) {
+      print('Download error: $e');
+      // Consider showing a user-friendly error message
+      // _showErrorSnackBar('Download/Share error: $e');
+    }
+  }
+
+  // Example _showErrorSnackBar
+  // void _showErrorSnackBar(String message) {
+  //   if (mounted) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(message), backgroundColor: Colors.red),
+  //     );
+  //   }
+  // }
+
 
   void _navigateToEditInvoice(Invoice invoice) {
     Navigator.push(
@@ -255,7 +334,12 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
 
   Future<void> _handlePrintInvoice(Invoice invoice) async {
     try {
-      final pdfBytes = await generateInvoicePdf(invoice);
+      final pdfSettings = await _settingsService.loadSettings();
+
+      // 2. Generate PDF with loaded settings
+      final pdfBytes = await generateInvoicePdf(invoice, pdfSettings); // PASS SETTINGS HERE
+
+      //final pdfBytes = await generateInvoicePdf(invoice);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
         name: 'Invoice-${invoice.invoiceNumber}.pdf',
@@ -268,7 +352,12 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
 
   Future<void> _handleDownloadInvoice(Invoice invoice) async {
     try {
-      final pdfBytes = await generateInvoicePdf(invoice);
+      final pdfSettings = await _settingsService.loadSettings();
+
+      // 2. Generate PDF with loaded settings
+      final pdfBytes = await generateInvoicePdf(invoice, pdfSettings); // PASS SETTINGS HERE
+
+      //final pdfBytes = await generateInvoicePdf(invoice);
       final name = 'Invoice-${invoice.invoiceNumber}.pdf';
       await Printing.sharePdf(
         bytes: pdfBytes,
@@ -387,13 +476,13 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
         motion: const BehindMotion(), // Different motion
         extentRatio: 0.65, // Adjusted for three actions
         children: [
-          SlidableAction( // PDF Actions can be grouped or individual
-            onPressed: (_) => _handlePrintInvoice(invoice),
-            backgroundColor: Colors.blue.shade600,
-            foregroundColor: Colors.white,
-            icon: Icons.print_outlined,
-            label: 'Print',
-          ),
+          // SlidableAction( // PDF Actions can be grouped or individual
+          //   onPressed: (_) => _handlePrintInvoice(invoice),
+          //   backgroundColor: Colors.blue.shade600,
+          //   foregroundColor: Colors.white,
+          //   icon: Icons.print_outlined,
+          //   label: 'Print',
+          // ),
           SlidableAction(
             onPressed: (_) => _handleArchiveInvoice(index),
             backgroundColor: Colors.orange.shade700,
@@ -452,7 +541,7 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -466,8 +555,47 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
                     ),
                     // You could add a status indicator here if invoices have statuses
                     // e.g., Text("Paid", style: TextStyle(color: Colors.green, fontSize: 10)),
+                    const SizedBox(height: 4), // Spacing between amount and icons
+                    Wrap(
+                      spacing: 0, // Horizontal spacing between icons
+                      runSpacing: 0, // Vertical spacing if they wrap (unlikely here)
+                      alignment: WrapAlignment.end, // Align icons to the end
+                      children: [
+                        IconButton(
+                          tooltip: 'Print',
+                          icon: const Icon(Icons.print_outlined),
+                          onPressed: () => _printInvoice(invoice),
+                          iconSize: 20, // Smaller icon size
+                          padding: const EdgeInsets.all(4), // Reduced padding
+                          visualDensity: VisualDensity.compact,
+                          color: colorScheme.onSurfaceVariant, // Consistent icon color
+                        ),
+                        IconButton(
+                          tooltip: 'Download/Share',
+                          icon: const Icon(Icons.share_outlined),
+                          onPressed: () => _downloadInvoice(invoice),
+                          iconSize: 20,
+                          padding: const EdgeInsets.all(4),
+                          visualDensity: VisualDensity.compact,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        IconButton(
+                          tooltip: 'Edit',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _navigateToEditInvoice(invoice),
+                          iconSize: 20,
+                          padding: const EdgeInsets.all(4),
+                          visualDensity: VisualDensity.compact,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    // ^^^^ END OF YOUR ACTIONS INTEGRATION ^^^^
+                    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                   ],
                 ),
+
               ],
             ),
           ),

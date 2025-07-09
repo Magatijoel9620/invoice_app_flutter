@@ -4,6 +4,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import '../models/invoice.dart';
 import '../services/invoice_storage_service.dart';
+import '../services/pdf_settings_service.dart';
 import '../utils/invoice_pdf.dart'; // For PDF functions
 import 'package:printing/printing.dart'; // For PDF functions
 
@@ -28,7 +29,7 @@ class _ArchivedInvoicesScreenState extends State<ArchivedInvoicesScreen> {
   String? _errorMessage;
   final DateFormat _dateFormat = DateFormat('MMM dd, yyyy');
   final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
-
+  final PdfSettingsService _settingsService = PdfSettingsService();
 
   @override
   void initState() {
@@ -175,7 +176,12 @@ class _ArchivedInvoicesScreenState extends State<ArchivedInvoicesScreen> {
 
   Future<void> _handlePrintInvoice(Invoice invoice) async {
     try {
-      final pdfBytes = await generateInvoicePdf(invoice);
+      final pdfSettings = await _settingsService.loadSettings();
+
+      // 2. Generate PDF with loaded settings
+      final pdfBytes = await generateInvoicePdf(invoice, pdfSettings); // PASS SETTINGS HERE
+
+     // final pdfBytes = await generateInvoicePdf(invoice);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
         name: 'Invoice-${invoice.invoiceNumber}.pdf',

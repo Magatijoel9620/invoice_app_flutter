@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/archived_invoices_screen.dart';
+import 'package:myapp/screens/pdf_settings_screen.dart';
+import 'screens/archived_invoices_screen.dart';
 import 'theme/theme.dart'; // Assuming AppTheme.darkTheme() and AppTheme.lightTheme() exist
 import 'screens/home_screen.dart';
 import 'screens/invoice_entry_screen.dart';
@@ -159,6 +160,15 @@ class _MainScreenState extends State<MainScreen> {
               );
             },
           ),
+          // Example: In your main app's drawer or AppBar
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PdfSettingsScreen()),
+              );
+            },
+          ),
           ListTile(
             leading: Icon(widget.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
             title: Text(widget.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'),
@@ -236,6 +246,15 @@ class _MainScreenState extends State<MainScreen> {
             ),
             tooltip: widget.isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
             onPressed: widget.toggleTheme,
+          ),
+          // Example: In your main app's drawer or AppBar
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PdfSettingsScreen()),
+              );
+            },
           ),
         ],
         // backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.surface,

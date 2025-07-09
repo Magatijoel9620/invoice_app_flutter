@@ -1,9 +1,11 @@
+// lib/utils/invoice_pdf_util.dart (or wherever your generateInvoicePdf is)
 import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart'; // Make sure this imports your updated Invoice model
-import '../models/invoice.dart'; // Make sure this imports your updated Invoice model
+import 'package:pdf/pdf.dart';
+import '../models/invoice.dart';
+import '../models/pdf_settings.dart'; // Import PdfSettings
 
-Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
+Future<Uint8List> generateInvoicePdf(Invoice invoice, PdfSettings settings) async { // Add settings parameter
   final pdf = pw.Document();
 
   pdf.addPage(
@@ -16,7 +18,7 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
           children: [
             // Header
             pw.Text(
-              'Hempon Group',
+              settings.companyName, // Use from settings
               style: pw.TextStyle(
                 fontSize: 32,
                 fontWeight: pw.FontWeight.bold,
@@ -26,7 +28,7 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
             pw.SizedBox(height: 16),
             pw.Divider(),
 
-            // Invoice and Client Info
+            // ... (Invoice and Client Info - remains the same) ...
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
@@ -49,23 +51,20 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
                 ),
                 pw.BarcodeWidget(
                   barcode: pw.Barcode.qrCode(),
-                  data: 'Invoice#${invoice.invoiceNumber}',
+                  data: 'Invoice#${invoice.invoiceNumber}\nClient:${invoice.clientName}\nCompany:${settings.companyName}', // Add more data to QR
                   width: 60,
                   height: 60,
                 ),
               ],
             ),
-
             pw.SizedBox(height: 32),
 
-            // Items Table
+            // ... (Items Table - remains the same) ...
             pw.Text(
               'Invoice Items',
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 8),
-
-            // Table for line items
             pw.TableHelper.fromTextArray(
               headers: ['#', 'Description', 'Quantity', 'Unit Price', 'Total'],
               data: List.generate(invoice.lineItems.length, (index) {
@@ -89,10 +88,7 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
               cellAlignment: pw.Alignment.centerLeft,
               cellPadding: const pw.EdgeInsets.all(8),
             ),
-
-            // Total Payment Section
             pw.SizedBox(height: 12),
-
             pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Row(
@@ -112,31 +108,35 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
                 ],
               ),
             ),
-
             pw.SizedBox(height: 32),
 
-            // Payment Info Section
+
+            // Payment Info Section - Use from settings
             pw.Text(
               'Payment Details',
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 8),
-            pw.Text('Bank Name: KCB'),
-            pw.Text('Account Name: Magati Joel Omwoyo'),
-            pw.Text('Account Number: 1223534448'),
-            pw.SizedBox(height: 8),
-            pw.Text('M-Pesa Till: 8804788'),
-            pw.Text('Account: Joel Omwoyo Magati'),
-            pw.SizedBox(height: 8),
-            pw.Text('M-Pesa Phone No: +254711879129'),
-            pw.Text('Account: Magati Joel'),
+            if (settings.bankName.isNotEmpty) pw.Text('Bank Name: ${settings.bankName}'),
+            if (settings.bankAccountName.isNotEmpty) pw.Text('Account Name: ${settings.bankAccountName}'),
+            if (settings.bankAccountNumber.isNotEmpty) pw.Text('Account Number: ${settings.bankAccountNumber}'),
+
+            if (settings.mpesaTillNumber.isNotEmpty || settings.mpesaPhoneNumber.isNotEmpty) pw.SizedBox(height: 8),
+
+            if (settings.mpesaTillNumber.isNotEmpty) pw.Text('M-Pesa Till: ${settings.mpesaTillNumber}'),
+            if (settings.mpesaTillAccountName.isNotEmpty) pw.Text('Account: ${settings.mpesaTillAccountName}'),
+
+            if (settings.mpesaTillNumber.isNotEmpty && settings.mpesaPhoneNumber.isNotEmpty) pw.SizedBox(height: 8),
+
+            if (settings.mpesaPhoneNumber.isNotEmpty) pw.Text('M-Pesa Phone No: ${settings.mpesaPhoneNumber}'),
+            if (settings.mpesaPhoneAccountName.isNotEmpty) pw.Text('Account: ${settings.mpesaPhoneAccountName}'),
 
             pw.Spacer(),
 
             // Footer
             pw.Divider(),
             pw.Text(
-              'Thank you for your business!',
+              settings.thankYouMessage, // Use from settings
               style: pw.TextStyle(
                 fontSize: 14,
                 fontStyle: pw.FontStyle.italic,
@@ -151,3 +151,4 @@ Future<Uint8List> generateInvoicePdf(Invoice invoice) async {
 
   return pdf.save();
 }
+
