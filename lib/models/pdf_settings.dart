@@ -1,32 +1,68 @@
-// lib/models/pdf_settings.dart
-
 class PdfSettings {
+  // =========================
+  // COMPANY INFO
+  // =========================
   String companyName;
+  String companyAddress;
+  String companyEmail;
+  String companyPhone;
+  String kraPin;
+
+  // LOGO (NEW - for PDF branding)
+  String? logoPath;
+
+  // =========================
+  // BANK DETAILS
+  // =========================
   String bankName;
   String bankAccountName;
   String bankAccountNumber;
+
+  // =========================
+  // M-PESA DETAILS
+  // =========================
   String mpesaTillNumber;
-  String mpesaTillAccountName; // Often the business name or individual's name
+  String mpesaTillAccountName;
   String mpesaPhoneNumber;
-  String mpesaPhoneAccountName; // Often the individual's name
+  String mpesaPhoneAccountName;
+
+  // =========================
+  // FOOTER
+  // =========================
   String thankYouMessage;
 
   PdfSettings({
-    this.companyName = 'Hempon Group', // Default value
+    this.companyName = 'Hempon Group',
+    this.companyAddress = 'Mombasa, Kenya',
+    this.companyEmail = 'info@hempongroup.co.ke',
+    this.companyPhone = '+254738219953',
+    this.kraPin = '',
+
+    this.logoPath,
+
     this.bankName = 'KCB',
-    this.bankAccountName = 'Magati Joel Omwoyo',
+    this.bankAccountName = 'MAGATI JOEL',
     this.bankAccountNumber = '1223534448',
+
     this.mpesaTillNumber = '8804788',
-    this.mpesaTillAccountName = 'Joel Omwoyo Magati',
+    this.mpesaTillAccountName = 'JOEL OMWOYO',
     this.mpesaPhoneNumber = '+254711879129',
-    this.mpesaPhoneAccountName = 'Magati Joel',
+    this.mpesaPhoneAccountName = 'MAGATI JOEL',
+
     this.thankYouMessage = 'Thank you for your business!',
   });
 
-  // Method to convert PdfSettings to a Map (for JSON storage)
+  // =========================
+  // TO JSON
+  // =========================
   Map<String, dynamic> toJson() {
     return {
       'companyName': companyName,
+      'companyAddress': companyAddress,
+      'companyEmail': companyEmail,
+      'companyPhone': companyPhone,
+      'kraPin': kraPin,
+      'logoPath': logoPath,
       'bankName': bankName,
       'bankAccountName': bankAccountName,
       'bankAccountNumber': bankAccountNumber,
@@ -38,19 +74,29 @@ class PdfSettings {
     };
   }
 
-  // Factory constructor to create PdfSettings from a Map (from JSON)
+  // =========================
+  // FROM JSON
+  // =========================
   factory PdfSettings.fromJson(Map<String, dynamic> json) {
     return PdfSettings(
       companyName: json['companyName'] as String? ?? 'Hempon Group',
+      companyAddress: json['companyAddress'] as String? ?? 'Mombasa, Kenya',
+      companyEmail: json['companyEmail'] as String? ?? 'info@hempongroup.co.ke',
+      companyPhone: json['companyPhone'] as String? ?? '+254738219953',
+      kraPin: json['kraPin'] as String? ?? '',
+
+      logoPath: json['logoPath'] as String?,
+
       bankName: json['bankName'] as String? ?? 'KCB',
-      bankAccountName: json['bankAccountName'] as String? ?? 'Magati Joel Omwoyo',
+      bankAccountName: json['bankAccountName'] as String? ?? 'MAGATI JOEL',
       bankAccountNumber: json['bankAccountNumber'] as String? ?? '1223534448',
+
       mpesaTillNumber: json['mpesaTillNumber'] as String? ?? '8804788',
-      mpesaTillAccountName: json['mpesaTillAccountName'] as String? ?? 'Joel Omwoyo Magati',
+      mpesaTillAccountName: json['mpesaTillAccountName'] as String? ?? 'JOEL OMWOYO',
       mpesaPhoneNumber: json['mpesaPhoneNumber'] as String? ?? '+254711879129',
-      mpesaPhoneAccountName: json['mpesaPhoneAccountName'] as String? ?? 'Magati Joel',
+      mpesaPhoneAccountName: json['mpesaPhoneAccountName'] as String? ?? 'MAGATI JOEL',
+
       thankYouMessage: json['thankYouMessage'] as String? ?? 'Thank you for your business!',
     );
   }
 }
-

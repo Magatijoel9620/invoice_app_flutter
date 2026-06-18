@@ -1,89 +1,461 @@
 # 🧾 Flutter Invoice App
 
-A modern, cross-platform Flutter application for managing invoices. Supports dark mode, PDF generation, and invoice archiving. Designed for both web and mobile platforms.
+A modern, feature-rich, cross-platform Flutter application for creating, managing, printing, and sharing professional invoices.
 
-## ✨ Features
-
-- 📄 **Invoice Management**: Create, view, edit, and delete invoices with detailed line items.
-- 📂 **Invoice Archiving**: Soft delete invoices by archiving them, keeping your active list clean.
-- 🌙 **Theme Customization**: Seamlessly switch between light and dark themes.
-- 🖨️ **Print Invoices**: Generate printable views of your invoices (works on web and mobile via system print dialogs).
-- 📥 **Download/Share as PDF**: Export invoices as PDF files for easy sharing and record-keeping.
-- 🔐 **Local Data Storage**: Invoice data is saved locally on the device for persistence.
-    - *Note: The current implementation uses a placeholder/simulated storage service. For production, integrate with a robust solution like SQLite (`sqflite`), Hive, or a backend service.*
-- 🎨 **Modern UI**: Clean and intuitive user interface built with Material Design 3 principles.
-- 📱 **Responsive Design**: Adapts to different screen sizes for a consistent experience on mobile and web.
-- 🌍 **Localization Ready**: Uses `intl` for date formatting, making it easier to adapt for different locales.
-
-## 🖥️ Key Screens
-
--   **Invoice List Screen**:
-    -   Displays a list of active invoices, sorted by date.
-    -   Swipe actions to quickly edit, archive, print, or delete invoices.
-    -   Pull-to-refresh functionality.
-    -   Clear empty state and error messages.
--   **Invoice Entry Screen**:
-    -   A dynamic form for creating new invoices or editing existing ones.
-    -   Add/remove line items easily.
-    -   Automatic calculation of total amounts.
-    -   Can be presented as a full screen or a modal bottom sheet.
--   **(Coming Soon/Optional) Archived Invoices Screen**: A dedicated view for managing archived invoices.
-
-## 📦 Core Dependencies
-
-| Package              | Purpose                                       |
-|----------------------|-----------------------------------------------|
-| `flutter_slidable`   | Swipeable list items for quick actions        |
-| `printing`           | PDF generation, layout, printing, and sharing |
-| `intl`               | Internationalization and date/number formatting |
-| `uuid`               | Generating unique IDs for invoices            |
-| `shared_preferences` | Storing user preferences (e.g., theme mode)   |
-| `path_provider`      | (Typically used with file-based storage like Hive/Sqflite to find appropriate directories) |
-
-## 🚀 Getting Started
-
-### Prerequisites
-
--   [Flutter SDK](https://flutter.dev/docs/get-started/install) (ensure it's added to your PATH)
--   An IDE like Android Studio (with Flutter plugin) or VS Code (with Flutter extension)
--   A device or emulator to run the app
-
-### 1. Clone the Repository
-
-### 2. Install Dependencies
-
-Navigate to the project directory and run:
-
-### 3. Run the Application
-
-You can run the application on your chosen device/emulator or on the web.
-
-**For Mobile (Android/iOS):**
-
-Make sure you have a connected device or a running emulator.
-
-**For Web:**
-(You can replace `chrome` with `edge` or other supported browsers.)
-
-**For Desktop (if configured):**
-(You can replace `chrome` with `edge` or other supported browsers.)
-
-**For Desktop (if configured):**
-
-## 💡 Future Enhancements / TODO
-
--   [ ] Implement a robust local database solution (e.g., `sqflite` or `hive`).
--   [ ] Add an "Archived Invoices" screen with unarchive functionality.
--   [ ] User authentication (optional, for cloud sync).
--   [ ] Cloud synchronization of invoices.
--   [ ] More detailed settings/preferences screen.
--   [ ] Unit and widget tests for core functionalities.
--   [ ] Customizable PDF templates.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Magatijoel9620/invoice_app_flutter/issues).
+Built with Flutter and Material Design 3, the app supports Android, iOS, Web, Windows, Linux, and macOS while providing a clean and responsive user experience.
 
 ---
 
-_This README was last updated on 20225-07-08._
+## ✨ Features
+
+### 📄 Invoice Management
+
+* Create professional invoices
+* Edit existing invoices
+* Delete invoices permanently
+* Automatic invoice total calculations
+* Dynamic line item management
+* Real-time line item total calculations
+* Client information management
+
+### 📦 Line Items
+
+* Add unlimited invoice items
+* Quantity and unit price support
+* Automatic line totals
+* Automatic invoice grand total updates
+* Validation for required fields
+
+### 📂 Invoice Archiving
+
+* Archive invoices instead of deleting
+* Keep active invoice list clean
+* Restore archived invoices (planned)
+* Soft-delete functionality
+
+### 🖨️ PDF Generation
+
+Generate beautiful professional PDFs with:
+
+* Company branding
+* Company logo support
+* QR code generation
+* Invoice details section
+* Itemized invoice tables
+* Payment instructions
+* Bank details
+* M-Pesa payment details
+* Thank-you message
+* Print-ready layouts
+
+### 🎨 PDF Branding & Customization
+
+Customize PDFs directly from the application:
+
+* Upload company logo
+* Company name customization
+* Colored PDF header
+* Custom footer message
+* Payment details configuration
+* Bank account information
+* M-Pesa Till Number
+* M-Pesa Phone Number
+
+### 📥 Export & Sharing
+
+* Print invoices directly
+* Download PDF invoices
+* Share invoices via device sharing options
+* Web PDF download support
+* Mobile print dialog support
+
+### 🌙 Theme Support
+
+* Light Mode
+* Dark Mode
+* Material Design 3 styling
+* Consistent color schemes
+
+### 💾 Local Storage
+
+Stores data locally on the device:
+
+* Invoices
+* PDF settings
+* Theme preferences
+* User customizations
+
+### 📱 Cross Platform
+
+Supports:
+
+* Android
+* iOS
+* Web
+* Windows
+* Linux
+* macOS
+
+### 🔄 Responsive Design
+
+* Mobile-friendly layouts
+* Tablet optimization
+* Desktop support
+* Adaptive navigation
+
+---
+
+# 🖥️ Screens
+
+## Invoice List Screen
+
+Features:
+
+* View all active invoices
+* Pull-to-refresh
+* Swipe actions
+* Quick edit
+* Quick archive
+* Quick delete
+* Print invoice
+* Share invoice
+* Search-ready structure
+
+### Swipe Actions
+
+#### Left Swipe
+
+* Edit Invoice
+
+#### Right Swipe
+
+* Archive Invoice
+* Delete Invoice
+
+---
+
+## Invoice Entry Screen
+
+Features:
+
+* Create new invoice
+* Edit existing invoice
+* Dynamic line items
+* Automatic calculations
+* Validation
+* Responsive form layout
+
+### Invoice Information
+
+* Invoice Number
+* Client Name
+* Invoice Date
+
+### Line Items
+
+Each item includes:
+
+* Description
+* Quantity
+* Unit Price
+* Line Total
+
+---
+
+## PDF Settings Screen
+
+Configure:
+
+### Company Information
+
+* Company Name
+* Company Logo
+* Thank You Message
+
+### Bank Details
+
+* Bank Name
+* Account Name
+* Account Number
+
+### M-Pesa Till
+
+* Till Number
+* Account Name
+
+### M-Pesa Phone
+
+* Phone Number
+* Account Name
+
+---
+
+# 📄 PDF Output Features
+
+Generated PDFs include:
+
+✅ Company Logo
+
+✅ Company Name
+
+✅ Colored Header Bar
+
+✅ Invoice Details
+
+✅ QR Code
+
+✅ Itemized Table
+
+✅ Line Totals
+
+✅ Grand Total
+
+✅ Payment Instructions
+
+✅ Thank You Message
+
+✅ Footer Page Numbers
+
+---
+
+# 🏗️ Project Structure
+
+```text
+lib/
+│
+├── models/
+│   ├── invoice.dart
+│   ├── line_item.dart
+│   └── pdf_settings.dart
+│
+├── screens/
+│   ├── invoice_list_screen.dart
+│   ├── invoice_entry_screen.dart
+│   ├── pdf_settings_screen.dart
+│   └── home_screen.dart
+│
+├── services/
+│   ├── invoice_storage_service.dart
+│   └── pdf_settings_service.dart
+│
+├── utils/
+│   └── invoice_pdf_util.dart
+│
+├── widgets/
+│
+└── main.dart
+```
+
+---
+
+# 📦 Dependencies
+
+| Package            | Purpose                      |
+| ------------------ | ---------------------------- |
+| flutter_slidable   | Swipe actions                |
+| printing           | PDF printing and sharing     |
+| pdf                | PDF document creation        |
+| intl               | Currency and date formatting |
+| image_picker       | Company logo upload          |
+| shared_preferences | Settings persistence         |
+| uuid               | Unique invoice IDs           |
+| universal_html     | Web downloads                |
+| path_provider      | Local file storage           |
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Install:
+
+* Flutter SDK (3.x or newer)
+* Android Studio or VS Code
+* Flutter extension
+* Device or emulator
+
+Verify installation:
+
+```bash
+flutter doctor
+```
+
+---
+
+## Clone Repository
+
+```bash
+git clone https://github.com/yourusername/flutter_invoice_app.git
+
+cd flutter_invoice_app
+```
+
+---
+
+## Install Dependencies
+
+```bash
+flutter pub get
+```
+
+---
+
+## Run Application
+
+### Android
+
+```bash
+flutter run
+```
+
+### iOS
+
+```bash
+flutter run
+```
+
+### Web
+
+```bash
+flutter run -d chrome
+```
+
+### Windows
+
+```bash
+flutter run -d windows
+```
+
+### Linux
+
+```bash
+flutter run -d linux
+```
+
+### macOS
+
+```bash
+flutter run -d macos
+```
+
+---
+
+# 👨‍💻 Developer Notes
+
+## PDF Branding
+
+The application supports logo uploads through:
+
+```dart
+PdfSettings.logoPath
+```
+
+The logo is stored locally and loaded during PDF generation.
+
+---
+
+## Settings Persistence
+
+PDF settings are stored using:
+
+```dart
+SharedPreferences
+```
+
+through:
+
+```dart
+PdfSettingsService
+```
+
+---
+
+## Invoice Storage
+
+Current implementation uses local storage.
+
+For production consider:
+
+* Hive
+* Isar
+* SQLite (sqflite)
+* Firebase Firestore
+* Supabase
+
+---
+
+## Architecture
+
+The project follows a simple layered architecture:
+
+```text
+UI (Screens)
+     ↓
+Services
+     ↓
+Models
+     ↓
+Storage
+```
+
+---
+
+# 🔮 Roadmap
+
+## Planned Features
+
+* [ ] Archived invoices screen
+* [ ] Invoice search
+* [ ] Invoice filtering
+* [ ] Invoice status tracking
+* [ ] Customer database
+* [ ] Tax/VAT support
+* [ ] Multiple currencies
+* [ ] Recurring invoices
+* [ ] Invoice templates
+* [ ] Email invoices
+* [ ] Cloud sync
+* [ ] Backup & restore
+* [ ] PDF themes
+* [ ] Analytics dashboard
+* [ ] Unit tests
+* [ ] Widget tests
+* [ ] Integration tests
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch
+
+```bash
+git checkout -b feature/my-feature
+```
+
+3. Commit changes
+
+```bash
+git commit -m "Add my feature"
+```
+
+4. Push changes
+
+```bash
+git push origin feature/my-feature
+```
+
+5. Open a Pull Request
+
+---
+
+# 📜 License
+
+This project is licensed under the MIT License.
+
+---
+
+Built with ❤️ using Flutter.

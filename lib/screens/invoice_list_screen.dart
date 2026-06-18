@@ -13,6 +13,7 @@ import '../screens/invoice_entry_screen.dart';
 import '../services/invoice_storage_service.dart';
 import '../services/pdf_settings_service.dart';
 import '../utils/invoice_pdf.dart';
+import 'home_screen.dart';
 
 // Removed duplicate import of printing/printing.dart
 
@@ -51,7 +52,17 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
     super.initState();
     _loadInvoices();
   }
-
+  void _navigateToPdfSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(
+          toggleTheme: () {},
+          isDarkMode: false,
+        ),
+      ),
+    );
+  }
   Future<void> _loadInvoices({bool showLoadingIndicator = true}) async {
     if (mounted && showLoadingIndicator) {
       setState(() {
@@ -386,7 +397,30 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
     // print("-----------------------------");
 
     // The body content:
-    return _buildBody(theme, colorScheme);
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text('Invoices'),
+          centerTitle: true,
+          elevation: 0,
+          actions: [
+
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              tooltip: 'PDF Settings',
+              onPressed: () {
+                Navigator.pushNamed(context, '/pdf-settings');
+              },
+            ),
+            IconButton(
+
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+
+        body: _buildBody(theme, colorScheme),
+    );
   }
 
   Widget _buildBody(ThemeData theme, ColorScheme colorScheme) {

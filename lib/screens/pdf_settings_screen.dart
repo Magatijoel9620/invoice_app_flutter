@@ -2,7 +2,8 @@
 import 'package:flutter/material.dart';
 import '../models/pdf_settings.dart';
 import '../services/pdf_settings_service.dart';
-
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 class PdfSettingsScreen extends StatefulWidget {
   const PdfSettingsScreen({super.key});
 
@@ -11,6 +12,7 @@ class PdfSettingsScreen extends StatefulWidget {
 }
 
 class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
+  String? _logoPath;
   final _formKey = GlobalKey<FormState>();
   final PdfSettingsService _settingsService = PdfSettingsService();
   late Future<PdfSettings> _settingsFuture;
@@ -26,17 +28,28 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
   final _mpesaPhoneNumberController = TextEditingController();
   final _mpesaPhoneAccountNameController = TextEditingController();
   final _thankYouMessageController = TextEditingController();
-
+  final ImagePicker _picker = ImagePicker();
   @override
   void initState() {
     super.initState();
     _settingsFuture = _loadAndSetSettings();
   }
+  Future<void> pickLogo() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
+    if (image != null) {
+      setState(() {
+        _logoPath = image.path;
+      });
+    }
+  }
   Future<PdfSettings> _loadAndSetSettings() async {
     final settings = await _settingsService.loadSettings();
     setState(() {
       _currentSettings = settings;
+      _logoPath = settings.logoPath;
       _companyNameController.text = _currentSettings.companyName;
       _bankNameController.text = _currentSettings.bankName;
       _bankAccountNameController.text = _currentSettings.bankAccountName;
@@ -65,7 +78,7 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
   }
 
   void _saveSettings() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState!.save(); // Triggers onSaved for TextFormFields
 
       final updatedSettings = PdfSettings(
@@ -78,6 +91,7 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
         mpesaPhoneNumber: _mpesaPhoneNumberController.text.trim(),
         mpesaPhoneAccountName: _mpesaPhoneAccountNameController.text.trim(),
         thankYouMessage: _thankYouMessageController.text.trim(),
+        logoPath: _logoPath,
       );
 
       await _settingsService.saveSettings(updatedSettings);
@@ -152,6 +166,35 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
               padding: const EdgeInsets.all(16.0),
               children: <Widget>[
                 Text('Company & General', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+
+                Center(
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: pickLogo,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: _logoPath != null
+                              ? Image.file(File(_logoPath!), fit: BoxFit.cover)
+                              : (_currentSettings.logoPath != null
+                              ? Image.file(File(_currentSettings.logoPath!))
+                              : const Icon(Icons.image)),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text("Tap to upload company logo"),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
                 _buildTextField(
                   controller: _companyNameController,
                   labelText: 'Company Name',

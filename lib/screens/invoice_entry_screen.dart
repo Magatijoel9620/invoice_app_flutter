@@ -70,11 +70,16 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
   //final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
   final NumberFormat _currencyFormat = NumberFormat.currency(
-      locale: 'sw_KE', symbol: 'Ksh ' // Optionally, you can explicitly set the symbol if needed
+      locale: 'en_KE', symbol: 'KES ', decimalDigits: 2, // Optionally, you can explicitly set the symbol if needed
   );
   List<LineItemUIData> _lineItemUIList = [];
   double _totalAmount = 0.0;
+  double _subTotal = 0.0;
+  double _vatRate = 16.0;
+  double _vatAmount = 0.0;
+  double _grandTotal = 0.0;
   bool _isLoading = false;
+  bool _applyVat = true;
 
   @override
   void initState() {
@@ -95,6 +100,7 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
     } else {
       _dateController.text = _dateFormat.format(DateTime.now().toLocal());
     }
+
     _updateTotalAmount(); // Calculate initial total
   }
 
@@ -162,14 +168,31 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
   }
 
   void _updateTotalAmount() {
-    double total = 0;
+    double subtotal = 0;
+
     for (var itemData in _lineItemUIList) {
-      final qty = int.tryParse(itemData.quantityController.text) ?? 0;
-      final price = double.tryParse(itemData.unitPriceController.text.replaceAll(',', '.')) ?? 0.0;
-      total += qty * price;
+      final qty =
+          int.tryParse(itemData.quantityController.text) ?? 0;
+
+      final price =
+          double.tryParse(
+            itemData.unitPriceController.text.replaceAll(',', '.'),
+          ) ??
+              0.0;
+
+      subtotal += qty * price;
     }
+
+    final vat =
+    _applyVat
+        ? subtotal * (_vatRate / 100)
+        : 0.0;
+
     setState(() {
-      _totalAmount = total;
+      _subTotal = subtotal;
+      _vatAmount = vat;
+      _grandTotal = subtotal + vat;
+      _totalAmount = _grandTotal;
     });
   }
 
@@ -293,8 +316,15 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
   // Helper to build the main form content, reusable by both modes
   Widget _buildFormContent(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     return SingleChildScrollView(
-      controller: widget.scrollController, // Use passed controller for DraggableScrollableSheet
-      padding: const EdgeInsets.all(16.0),
+      controller: widget.scrollController,
+      keyboardDismissBehavior:
+      ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -379,6 +409,26 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
               ),
             ),
             const SizedBox(height: 24),
+            Card(
+                elevation: 0,
+                surfaceTintColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              child: SwitchListTile(
+                secondary: const Icon(Icons.receipt_long),
+                title: const Text("Apply VAT"),
+                subtitle: Text("${_vatRate.toStringAsFixed(0)}%"),
+                value: _applyVat,
+                onChanged: (value) {
+                  setState(() {
+                    _applyVat = value;
+                  });
+                  _updateTotalAmount();
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
             _buildTotalAmountCard(theme, colorScheme),
             // Save button is handled differently for bottom sheet vs full screen
             if (!widget.isInBottomSheet) ...[
@@ -504,8 +554,11 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
 
   Widget _buildInvoiceDetailsCard(ThemeData theme, ColorScheme colorScheme) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -541,12 +594,32 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
     );
   }
 
-  Widget _buildLineItemWidget(LineItemUIData itemData, int index, ThemeData theme) {
+  Widget _buildLineItemWidget(
+      LineItemUIData itemData,
+      int index,
+      ThemeData theme,
+      ) {
     final colorScheme = theme.colorScheme;
+
+    // ✅ Calculate here (outside UI tree)
+    final qty =
+        int.tryParse(itemData.quantityController.text) ?? 0;
+
+    final price =
+        double.tryParse(
+          itemData.unitPriceController.text.replaceAll(',', '.'),
+        ) ??
+            0.0;
+
+    final itemTotal = qty * price;
+
     return Card(
-      elevation: 1.5,
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -555,7 +628,13 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Item ${index + 1}', style: theme.textTheme.titleSmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold)),
+                Text(
+                  'Item ${index + 1}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 IconButton(
                   icon: Icon(Icons.delete_outline, color: colorScheme.error),
                   onPressed: () => _removeLineItem(index),
@@ -565,15 +644,19 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 8),
+
             _buildTextFormField(
               controller: itemData.descriptionController,
               labelText: 'Description',
               prefixIcon: Icons.description_outlined,
               validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-              onChanged: (_) => _updateTotalAmount(),
+                onChanged: (_) => setState(() {})
             ),
+
             const SizedBox(height: 12),
+
             Row(
               children: [
                 Expanded(
@@ -582,9 +665,12 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                     labelText: 'Qty',
                     prefixIcon: Icons.format_list_numbered,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (v) => (int.tryParse(v!) ?? 0) <= 0 ? 'Invalid' : null,
-                    onChanged: (_) => _updateTotalAmount(),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly
+                    ],
+                    validator: (v) =>
+                    (int.tryParse(v!) ?? 0) <= 0 ? 'Invalid' : null,
+                      onChanged: (_) => setState(() {})
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -593,14 +679,34 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
                     controller: itemData.unitPriceController,
                     labelText: 'Unit Price',
                     prefixIcon: Icons.attach_money,
-                   // prefixText: 'Ksh ',
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                    validator: (v) => (double.tryParse(v!.replaceAll(',', '.')) ?? -1) < 0 ? 'Invalid' : null,
-                    onChanged: (_) => _updateTotalAmount(),
+                    keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      )
+                    ],
+                    validator: (v) =>
+                    (double.tryParse(v!.replaceAll(',', '.')) ?? -1) < 0
+                        ? 'Invalid'
+                        : null,
+                      onChanged: (_) => setState(() {})
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Line Total: ${_currencyFormat.format(itemTotal)}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
             ),
           ],
         ),
@@ -608,20 +714,74 @@ class _InvoiceEntryScreenState extends State<InvoiceEntryScreen> {
     );
   }
 
-  Widget _buildTotalAmountCard(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildTotalAmountCard(
+      ThemeData theme,
+      ColorScheme colorScheme,
+      ) {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: colorScheme.primaryContainer,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        padding: const EdgeInsets.all(20),
+        child: Column(
           children: [
-            Text('Total Amount:', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer)),
-            Text(
-              _currencyFormat.format(_totalAmount),
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
+            Row(
+              mainAxisAlignment:
+              MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Subtotal"),
+                Text(
+                  _currencyFormat.format(_subTotal),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              mainAxisAlignment:
+              MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "VAT (${_vatRate.toStringAsFixed(0)}%)",
+                ),
+                Text(
+                  _currencyFormat.format(_vatAmount),
+                ),
+              ],
+            ),
+
+            const Divider(height: 25),
+
+            Row(
+              mainAxisAlignment:
+              MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Grand Total",
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(
+                    fontWeight:
+                    FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  _currencyFormat.format(
+                    _grandTotal,
+                  ),
+                  style: theme.textTheme
+                      .headlineSmall
+                      ?.copyWith(
+                    fontWeight:
+                    FontWeight.bold,
+                    color:
+                    colorScheme.primary,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
