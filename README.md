@@ -1,461 +1,71 @@
-# 🧾 Flutter Invoice App
+# InvoiceEasy V3.0 — merged offline-first + Supabase cloud build
 
-A modern, feature-rich, cross-platform Flutter application for creating, managing, printing, and sharing professional invoices.
+This build combines the richer InvoiceEasy V2.5/phase UI and platform targets with the V3.0 offline-first Supabase authentication, profile, cloud sync, account management, and delete-account Edge Function.
 
-Built with Flutter and Material Design 3, the app supports Android, iOS, Web, Windows, Linux, and macOS while providing a clean and responsive user experience.
+## What was merged
 
----
+- V2.5/phase UI and business setup flow
+- V3.0 Supabase authentication
+- Offline local storage remains the source used by the UI
+- Persistent sync queue for customers, products, invoices and business profile
+- Last-write-wins style timestamp merge
+- Supabase Row Level Security (one authenticated user -> one business)
+- Account profile, sign-out, password reset and cloud account deletion
+- Sync status banner and manual sync
+- Reports/export and the existing platform targets
+- Supabase migration consolidated into `supabase/migrations/20260912_v3_cloud_foundation.sql`
 
-## ✨ Features
+## Important architecture decision
 
-### 📄 Invoice Management
+The cloud schema stores the app's JSON models in `data` columns instead of duplicating every InvoiceEasy model field as a SQL column. This keeps the cloud layer compatible with the existing offline models while still enforcing ownership and business isolation through relational metadata + RLS.
 
-* Create professional invoices
-* Edit existing invoices
-* Delete invoices permanently
-* Automatic invoice total calculations
-* Dynamic line item management
-* Real-time line item total calculations
-* Client information management
+Only the consolidated V3 SQL migration is shipped. Earlier phase migrations defined incompatible schemas and must not be applied to the same fresh V3 database.
 
-### 📦 Line Items
-
-* Add unlimited invoice items
-* Quantity and unit price support
-* Automatic line totals
-* Automatic invoice grand total updates
-* Validation for required fields
-
-### 📂 Invoice Archiving
-
-* Archive invoices instead of deleting
-* Keep active invoice list clean
-* Restore archived invoices (planned)
-* Soft-delete functionality
-
-### 🖨️ PDF Generation
-
-Generate beautiful professional PDFs with:
-
-* Company branding
-* Company logo support
-* QR code generation
-* Invoice details section
-* Itemized invoice tables
-* Payment instructions
-* Bank details
-* M-Pesa payment details
-* Thank-you message
-* Print-ready layouts
-
-### 🎨 PDF Branding & Customization
-
-Customize PDFs directly from the application:
-
-* Upload company logo
-* Company name customization
-* Colored PDF header
-* Custom footer message
-* Payment details configuration
-* Bank account information
-* M-Pesa Till Number
-* M-Pesa Phone Number
-
-### 📥 Export & Sharing
-
-* Print invoices directly
-* Download PDF invoices
-* Share invoices via device sharing options
-* Web PDF download support
-* Mobile print dialog support
-
-### 🌙 Theme Support
-
-* Light Mode
-* Dark Mode
-* Material Design 3 styling
-* Consistent color schemes
-
-### 💾 Local Storage
-
-Stores data locally on the device:
-
-* Invoices
-* PDF settings
-* Theme preferences
-* User customizations
-
-### 📱 Cross Platform
-
-Supports:
-
-* Android
-* iOS
-* Web
-* Windows
-* Linux
-* macOS
-
-### 🔄 Responsive Design
-
-* Mobile-friendly layouts
-* Tablet optimization
-* Desktop support
-* Adaptive navigation
-
----
-
-# 🖥️ Screens
-
-## Invoice List Screen
-
-Features:
-
-* View all active invoices
-* Pull-to-refresh
-* Swipe actions
-* Quick edit
-* Quick archive
-* Quick delete
-* Print invoice
-* Share invoice
-* Search-ready structure
-
-### Swipe Actions
-
-#### Left Swipe
-
-* Edit Invoice
-
-#### Right Swipe
-
-* Archive Invoice
-* Delete Invoice
-
----
-
-## Invoice Entry Screen
-
-Features:
-
-* Create new invoice
-* Edit existing invoice
-* Dynamic line items
-* Automatic calculations
-* Validation
-* Responsive form layout
-
-### Invoice Information
-
-* Invoice Number
-* Client Name
-* Invoice Date
-
-### Line Items
-
-Each item includes:
-
-* Description
-* Quantity
-* Unit Price
-* Line Total
-
----
-
-## PDF Settings Screen
-
-Configure:
-
-### Company Information
-
-* Company Name
-* Company Logo
-* Thank You Message
-
-### Bank Details
-
-* Bank Name
-* Account Name
-* Account Number
-
-### M-Pesa Till
-
-* Till Number
-* Account Name
-
-### M-Pesa Phone
-
-* Phone Number
-* Account Name
-
----
-
-# 📄 PDF Output Features
-
-Generated PDFs include:
-
-✅ Company Logo
-
-✅ Company Name
-
-✅ Colored Header Bar
-
-✅ Invoice Details
-
-✅ QR Code
-
-✅ Itemized Table
-
-✅ Line Totals
-
-✅ Grand Total
-
-✅ Payment Instructions
-
-✅ Thank You Message
-
-✅ Footer Page Numbers
-
----
-
-# 🏗️ Project Structure
-
-```text
-lib/
-│
-├── models/
-│   ├── invoice.dart
-│   ├── line_item.dart
-│   └── pdf_settings.dart
-│
-├── screens/
-│   ├── invoice_list_screen.dart
-│   ├── invoice_entry_screen.dart
-│   ├── pdf_settings_screen.dart
-│   └── home_screen.dart
-│
-├── services/
-│   ├── invoice_storage_service.dart
-│   └── pdf_settings_service.dart
-│
-├── utils/
-│   └── invoice_pdf_util.dart
-│
-├── widgets/
-│
-└── main.dart
-```
-
----
-
-# 📦 Dependencies
-
-| Package            | Purpose                      |
-| ------------------ | ---------------------------- |
-| flutter_slidable   | Swipe actions                |
-| printing           | PDF printing and sharing     |
-| pdf                | PDF document creation        |
-| intl               | Currency and date formatting |
-| image_picker       | Company logo upload          |
-| shared_preferences | Settings persistence         |
-| uuid               | Unique invoice IDs           |
-| universal_html     | Web downloads                |
-| path_provider      | Local file storage           |
-
----
-
-# 🚀 Getting Started
-
-## Prerequisites
-
-Install:
-
-* Flutter SDK (3.x or newer)
-* Android Studio or VS Code
-* Flutter extension
-* Device or emulator
-
-Verify installation:
-
-```bash
-flutter doctor
-```
-
----
-
-## Clone Repository
-
-```bash
-git clone https://github.com/yourusername/flutter_invoice_app.git
-
-cd flutter_invoice_app
-```
-
----
-
-## Install Dependencies
+## Run locally without cloud
 
 ```bash
 flutter pub get
-```
-
----
-
-## Run Application
-
-### Android
-
-```bash
 flutter run
 ```
 
-### iOS
+If `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are omitted, InvoiceEasy runs as a local/offline app.
+
+## Run with Supabase
 
 ```bash
-flutter run
+flutter pub get
+flutter run   --dart-define=SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co   --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
-### Web
+Never put a Supabase secret key/service-role key in Flutter code or `--dart-define` values shipped to users.
 
-```bash
-flutter run -d chrome
-```
+See `SUPABASE_SETUP.md` for the complete setup walkthrough.
 
-### Windows
+## V3.0 implementation status
 
-```bash
-flutter run -d windows
-```
+### V3.0.1 — Supabase foundation
+- Email/password authentication and persistent sessions
+- Account profile
+- One authenticated user -> one business
+- Cloud repositories/mapping
+- RLS and automatic profile creation
 
-### Linux
+### V3.0.2 — Sync
+- Offline-first local writes
+- Account-scoped local storage
+- Persistent pending queue
+- Push/pull synchronization
+- Three-attempt transient retry
+- Last-write-wins conflict strategy
+- Cloud tombstones for deletes
+- First-login local/cloud bootstrap
 
-```bash
-flutter run -d linux
-```
+### V3.0.3 — Account
+- Account profile screen
+- Business data persisted through the cloud sync layer
+- Manual sync and status
+- Password reset
+- Sign out
+- Cloud account deletion through the Edge Function
 
-### macOS
-
-```bash
-flutter run -d macos
-```
-
----
-
-# 👨‍💻 Developer Notes
-
-## PDF Branding
-
-The application supports logo uploads through:
-
-```dart
-PdfSettings.logoPath
-```
-
-The logo is stored locally and loaded during PDF generation.
-
----
-
-## Settings Persistence
-
-PDF settings are stored using:
-
-```dart
-SharedPreferences
-```
-
-through:
-
-```dart
-PdfSettingsService
-```
-
----
-
-## Invoice Storage
-
-Current implementation uses local storage.
-
-For production consider:
-
-* Hive
-* Isar
-* SQLite (sqflite)
-* Firebase Firestore
-* Supabase
-
----
-
-## Architecture
-
-The project follows a simple layered architecture:
-
-```text
-UI (Screens)
-     ↓
-Services
-     ↓
-Models
-     ↓
-Storage
-```
-
----
-
-# 🔮 Roadmap
-
-## Planned Features
-
-* [ ] Archived invoices screen
-* [ ] Invoice search
-* [ ] Invoice filtering
-* [ ] Invoice status tracking
-* [ ] Customer database
-* [ ] Tax/VAT support
-* [ ] Multiple currencies
-* [ ] Recurring invoices
-* [ ] Invoice templates
-* [ ] Email invoices
-* [ ] Cloud sync
-* [ ] Backup & restore
-* [ ] PDF themes
-* [ ] Analytics dashboard
-* [ ] Unit tests
-* [ ] Widget tests
-* [ ] Integration tests
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome!
-
-1. Fork the repository
-2. Create a feature branch
-
-```bash
-git checkout -b feature/my-feature
-```
-
-3. Commit changes
-
-```bash
-git commit -m "Add my feature"
-```
-
-4. Push changes
-
-```bash
-git push origin feature/my-feature
-```
-
-5. Open a Pull Request
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-Built with ❤️ using Flutter.
+See `SUPABASE_SETUP.md` for deployment and migration instructions.

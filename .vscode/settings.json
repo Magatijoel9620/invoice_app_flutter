@@ -1,4 +1,5 @@
 {
     "IDX.aI.enableInlineCompletion": true,
-    "IDX.aI.enableCodebaseIndexing": true
+    "IDX.aI.enableCodebaseIndexing": true,
+    "cmake.sourceDirectory": "/home/joel/StudioProjects/invoice_app_flutter/linux/flutter"
 }

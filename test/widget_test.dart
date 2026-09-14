@@ -1,40 +1,31 @@
-// ignore_for_file: unused_import
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:myapp/main.dart'; // Update if your app file is named differently
+import 'package:invoice_easy/main.dart';
+import 'package:invoice_easy/services/local_store.dart';
 
 void main() {
-  testWidgets('InvoiceEasy Home screen UI test', (WidgetTester tester) async {
-    // Build the InvoiceEasy app
-    await tester.pumpWidget(const InvoiceApp());
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({
+      'ie_local_scope_v1/anonymous/ie_business_profile_v2':
+          '{"id":"default","name":"Test Business","businessType":"Other","phone":"","email":"","address":"","kraPin":"","currency":"KES","invoicePrefix":"INV","nextInvoiceNumber":1,"defaultDueDays":14,"vatRegistered":false,"vatRate":16,"logoPath":"","thankYouMessage":"Thank you for your business!","mpesaTill":"","paybill":"","bankName":"","bankAccount":"","updatedAt":"2000-01-01T00:00:00.000"}',
+    });
+    await LocalStore.initialize();
+  });
 
-    // Verify the title is shown
-    expect(find.text('InvoiceEasy'), findsWidgets);
-
-    // Verify home screen action buttons are present
-    expect(find.text('View Invoices'), findsOneWidget);
-    expect(find.text('New Invoice'), findsOneWidget);
-
-    // Tap the 'View Invoices' button and ensure navigation works
-    await tester.tap(find.text('View Invoices'));
+  testWidgets('shows the dashboard and switches to invoices', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: InvoiceEasyApp()));
     await tester.pumpAndSettle();
 
-    // Optionally check for expected content on InvoiceListScreen
-    // e.g., expect(find.text('No invoices yet'), findsOneWidget);
-
-    // Return to home screen
-    tester.pageBack(); // Simulates back navigation
+    expect(find.text('Dashboard'), findsOneWidget);
+    await tester.tap(find.text('Invoices'));
     await tester.pumpAndSettle();
 
-    // Tap the 'New Invoice' button and check navigation
-    await tester.tap(find.text('New Invoice'));
-    await tester.pumpAndSettle();
-
-    // Check if form fields are visible
-    expect(find.text('Description'), findsOneWidget);
-    expect(find.text('Qty'), findsOneWidget);
-    expect(find.text('Price'), findsOneWidget);
+    expect(find.text('Invoices'), findsWidgets);
+    expect(
+      find.text('Search, filter and manage every invoice.'),
+      findsOneWidget,
+    );
   });
 }
