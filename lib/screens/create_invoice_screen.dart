@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/guards/subscription_action_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../core/formatters.dart';
@@ -243,6 +244,7 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
   Widget _summary(String label, double value, {bool bold = false}) => Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label, style: TextStyle(fontWeight: bold ? FontWeight.w800 : null)), Text(money.format(value), style: TextStyle(fontWeight: bold ? FontWeight.w900 : FontWeight.w600, fontSize: bold ? 19 : null))]));
 
   Future<void> _quickAddCustomer() async {
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     final result = await showDialog<Customer>(context: context, builder: (_) => _CustomerDialog());
     if (result == null) return;
     await ref.read(customersProvider.notifier).upsert(result);
@@ -269,6 +271,7 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
   }
 
   Future<void> _duplicate(BusinessProfile? business) async {
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     final original = widget.invoice;
     if (original == null) return;
     final b = business ?? BusinessProfile(id: 'default', name: 'My Business', businessType: 'Other');
@@ -279,6 +282,7 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
   }
 
   Future<void> _save(BusinessProfile? business, {required bool draft}) async {
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     final selected = _resolveCustomer(ref.read(customersProvider).valueOrNull ?? []);
     if (selected == null) return _message('Select a customer first.');
     if (lines.isEmpty) return _message('Add at least one invoice item.');

@@ -5,9 +5,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app_shell.dart';
 import 'app/theme.dart';
 import 'providers/app_providers.dart';
+import 'core/providers/subscription_providers.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/business_setup_screen.dart';
 import 'services/auth_service.dart';
+import 'services/connectivity_service.dart';
 import 'services/cloud_config.dart';
 import 'services/local_store.dart';
 import 'services/migration_service.dart';
@@ -20,7 +22,35 @@ Future<void> main() async {
   await MigrationService.run();
   await SupabaseService.initialize();
 
-  runApp(const ProviderScope(child: InvoiceEasyApp()));
+  runApp(
+    const ProviderScope(
+      child: _ConnectivityStartup(child: InvoiceEasyApp()),
+    ),
+  );
+}
+
+
+class _ConnectivityStartup extends ConsumerStatefulWidget {
+  const _ConnectivityStartup({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_ConnectivityStartup> createState() => _ConnectivityStartupState();
+}
+
+class _ConnectivityStartupState extends ConsumerState<_ConnectivityStartup> {
+  @override
+  void initState() {
+    super.initState();
+    // Provider creation starts ConnectivityService immediately. Keeping this
+    // bootstrap outside the authenticated shell means connectivity is ready
+    // before the first dashboard/sync transition.
+    ref.read(connectivityProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class InvoiceEasyApp extends StatefulWidget {
@@ -137,6 +167,15 @@ class _AuthenticatedHomeState extends ConsumerState<_AuthenticatedHome> {
        * If the device is offline, bootstrap may fail. In that case we still
        * allow locally cached user-scoped data to be used.
        */
+      // Provision/refresh the server-side subscription before syncing so
+      // first-time cloud writes are evaluated against an initialized access
+      // record.
+      try {
+        await ref.read(subscriptionBootstrapProvider.future);
+      } catch (_) {
+        // Offline/unavailable subscription service: local data can continue.
+      }
+
       try {
         await ref.read(syncServiceProvider).bootstrap();
       } catch (_) {

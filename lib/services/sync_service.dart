@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'connectivity_service.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/business_profile.dart';
 import '../models/customer.dart';
@@ -24,8 +27,11 @@ class SyncService {
   final InvoiceRepository invoiceRepository;
   final SyncQueue queue;
   final SyncStatus status;
+  final ConnectivityService connectivity;
 
   bool _running = false;
+  bool _started = false;
+  ConnectivityState? _lastConnectivityState;
 
   SyncService({
     required this.businessRepository,
@@ -34,22 +40,73 @@ class SyncService {
     required this.invoiceRepository,
     required this.queue,
     required this.status,
+    required this.connectivity,
   });
 
   SupabaseClient get client => SupabaseService.client;
   User get user => client.auth.currentUser!;
 
-  Future<void> bootstrap() async {
-    await sync(isBootstrap: true);
+  Future<void> start() async {
+    if (_started) return;
+    _started = true;
+    _lastConnectivityState = connectivity.state;
+    connectivity.addListener(_handleConnectivityChanged);
+    queue.addListener(_handleQueueChanged);
+    await connectivity.start();
+    await status.refreshFromQueue(queue);
+    if (connectivity.isOnline) {
+      unawaited(sync());
+    }
   }
 
-  Future<void> sync({bool isBootstrap = false}) async {
+  void _handleQueueChanged() {
+    unawaited(status.refreshFromQueue(queue));
+    if (connectivity.isOnline && !_running) {
+      unawaited(sync());
+    }
+  }
+
+  void _handleConnectivityChanged() {
+    final current = connectivity.state;
+    final previous = _lastConnectivityState;
+    _lastConnectivityState = current;
+
+    if (current == ConnectivityState.online &&
+        previous != ConnectivityState.online &&
+        !_running) {
+      unawaited(sync());
+    }
+    if (current == ConnectivityState.offline && !_running) {
+      unawaited(status.refreshFromQueue(queue));
+      status.setState(
+        SyncState.offline,
+        message: 'Offline — changes stay on this device.',
+      );
+    }
+  }
+
+  Future<void> bootstrap() async {
+    await start();
+    await sync();
+  }
+
+  Future<void> retryNow() async {
+    await queue.resetFailures();
+    await sync();
+  }
+
+  Future<void> sync() async {
     if (_running) return;
+    if (!connectivity.isOnline) {
+      status.setState(SyncState.offline, message: 'Offline — changes stay on this device.');
+      await status.refreshFromQueue(queue);
+      return;
+    }
 
     if (!SupabaseService.initialized ||
         SupabaseService.tryClient?.auth.currentUser == null) {
-      status.setState(SyncState.offline, message: 'Cloud is not connected.');
-      status.setPending((await queue.all()).length);
+      status.setState(SyncState.idle, message: 'Sign in to sync your cloud data.');
+      await status.refreshFromQueue(queue);
       return;
     }
 
@@ -59,7 +116,7 @@ class SyncService {
       Object? lastError;
       for (var attempt = 1; attempt <= 3; attempt++) {
         try {
-          await _syncOnce(isBootstrap: isBootstrap);
+          await _syncOnce();
           lastError = null;
           break;
         } catch (error) {
@@ -82,7 +139,12 @@ class SyncService {
     }
   }
 
-  Future<void> _syncOnce({required bool isBootstrap}) async {
+  void dispose() {
+    connectivity.removeListener(_handleConnectivityChanged);
+    queue.removeListener(_handleQueueChanged);
+  }
+
+  Future<void> _syncOnce() async {
     final localBusiness = await businessRepository.get();
 
     // First pull the single cloud business. This is important on a fresh
@@ -101,7 +163,16 @@ class SyncService {
     }
 
     await _mergeChildren(business.id);
-    await _pushPending(business);
+
+    // Subscription access is authoritative on Supabase. Expired accounts can
+    // still pull/read their records, but pending local writes stay queued until
+    // the account becomes active again. This prevents bootstrap from failing
+    // repeatedly just because an expired account has offline changes.
+    final subscriptionStatus = await client.rpc('refresh_subscription_status');
+    final canWrite = subscriptionStatus == 'trialing' || subscriptionStatus == 'active';
+    if (canWrite) {
+      await _pushPending(business);
+    }
 
     // Pull once more after pushing. PostgreSQL triggers may update server
     // timestamps, and this final pull makes every device converge on the
@@ -343,61 +414,81 @@ class SyncService {
   Future<void> _pushPending(BusinessProfile business) async {
     final items = await queue.all();
     for (final change in items) {
+      if (!connectivity.isOnline) {
+        throw const _ConnectivityLostException();
+      }
+      if (change.permanentFailure || change.isWaitingForRetry) continue;
+
       if (change.entity != 'business' && change.operation != 'delete') {
-        // Ensure child payloads are always scoped to the currently authenticated
-        // business. This also prevents stale queues from another identity from
-        // crossing account boundaries.
         if (business.id != user.id) continue;
       }
 
-      final row = await _cloudRow(change, business.id);
-      final cloudTime = row == null ? null : _cloudTime(row);
-      if (cloudTime != null && cloudTime.isAfter(change.updatedAt.toUtc())) {
-        await queue.remove(change);
-        continue;
-      }
+      try {
+        final row = await _cloudRow(change, business.id);
+        final cloudTime = row == null ? null : _cloudTime(row);
+        if (cloudTime != null && cloudTime.isAfter(change.updatedAt.toUtc())) {
+          await queue.remove(change);
+          continue;
+        }
 
-      if (change.entity == 'business') {
-        if (change.operation == 'delete') {
-          await client
-              .from('businesses')
-              .update({
-                'deleted_at': DateTime.now().toUtc().toIso8601String(),
-                'updated_at': change.updatedAt.toUtc().toIso8601String(),
-              })
-              .eq('owner_id', user.id);
+        if (change.entity == 'business') {
+          if (change.operation == 'delete') {
+            await client
+                .from('businesses')
+                .update({
+                  'deleted_at': DateTime.now().toUtc().toIso8601String(),
+                  'updated_at': change.updatedAt.toUtc().toIso8601String(),
+                })
+                .eq('owner_id', user.id);
+          } else {
+            final model = BusinessProfile.fromJson(change.payload!);
+            await client.from('businesses').upsert(
+              CloudMapper.business(model, user.id),
+              onConflict: 'owner_id',
+            );
+          }
         } else {
-          final model = BusinessProfile.fromJson(change.payload!);
-          await client
-              .from('businesses')
-              .upsert(
-                CloudMapper.business(model, user.id),
-                onConflict: 'owner_id',
-              );
+          final table = '${change.entity}s';
+          final common = <String, dynamic>{
+            'id': change.id,
+            'owner_id': user.id,
+            'business_id': business.id,
+            'updated_at': change.updatedAt.toUtc().toIso8601String(),
+          };
+          if (change.operation == 'delete') {
+            await client.from(table).upsert({
+              ...common,
+              'data': <String, dynamic>{},
+              'deleted_at': DateTime.now().toUtc().toIso8601String(),
+            });
+          } else {
+            await client.from(table).upsert({
+              ...common,
+              'data': change.payload,
+              'deleted_at': null,
+            });
+          }
         }
-      } else {
-        final table = '${change.entity}s';
-        final common = <String, dynamic>{
-          'id': change.id,
-          'owner_id': user.id,
-          'business_id': business.id,
-          'updated_at': change.updatedAt.toUtc().toIso8601String(),
-        };
-        if (change.operation == 'delete') {
-          await client.from(table).upsert({
-            ...common,
-            'data': <String, dynamic>{},
-            'deleted_at': DateTime.now().toUtc().toIso8601String(),
-          });
-        } else {
-          await client.from(table).upsert({
-            ...common,
-            'data': change.payload,
-            'deleted_at': null,
-          });
+        await queue.remove(change);
+      } catch (error) {
+        final permanent = _isPermanent(error);
+        final message = _friendlyError(error);
+          final attempts = change.attempts + 1;
+        final exponent = attempts <= 1 ? 0 : (attempts - 1 > 5 ? 5 : attempts - 1);
+        final delay = Duration(seconds: attempts >= 5 ? 60 : 1 << exponent);
+        await queue.recordFailure(
+          change,
+          error: message,
+          retryAfter: delay,
+          permanent: permanent,
+        );
+        if (_isConnectivityError(error)) {
+          throw const _ConnectivityLostException();
         }
+        // Keep processing independent records. One malformed/permanently
+        // blocked mutation must not prevent other valid local changes from
+        // reaching the cloud.
       }
-      await queue.remove(change);
     }
   }
 
@@ -453,13 +544,54 @@ class SyncService {
   Map<String, dynamic> _map(dynamic value) =>
       Map<String, dynamic>.from((value as Map?) ?? <String, dynamic>{});
 
+  bool _isConnectivityError(Object error) {
+    if (error is _ConnectivityLostException ||
+        error is TimeoutException ||
+        error is http.ClientException) {
+      return true;
+    }
+    final message = error.toString().toLowerCase();
+    return message.contains('socketexception') ||
+        message.contains('failed host lookup') ||
+        message.contains('network is unreachable') ||
+        message.contains('connection reset') ||
+        message.contains('connection refused');
+  }
+
+  bool _isPermanent(Object error) {
+    if (_isConnectivityError(error)) return false;
+    if (error is PostgrestException) {
+      // Permission/subscription failures are recoverable. The queue remains
+      // visible and will retry after the account becomes writable.
+      if (error.code == '42501' ||
+          error.message.toLowerCase().contains('row-level security')) {
+        return false;
+      }
+      return error.code == '22P02' || error.code == '23502' || error.code == '23503';
+    }
+    return false;
+  }
+
   String _friendlyError(Object error) {
+    if (_isConnectivityError(error)) {
+      return 'Internet connection was lost. Your local changes are safe and will retry automatically.';
+    }
     if (error is AuthException) return error.message;
-    if (error is PostgrestException) return error.message;
+    if (error is PostgrestException) {
+      final message = error.message.toLowerCase();
+      if (message.contains('row-level security') || message.contains('permission denied')) {
+        return 'Cloud writes are currently restricted. Check your InvoiceEasy subscription and try again.';
+      }
+      return error.message;
+    }
     return error.toString();
   }
 }
 
 extension<T> on Iterable<T> {
   T? get firstOrNull => isEmpty ? null : first;
+}
+
+class _ConnectivityLostException implements Exception {
+  const _ConnectivityLostException();
 }

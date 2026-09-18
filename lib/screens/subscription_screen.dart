@@ -1,394 +1,139 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/providers/subscription_providers.dart';
+import '../domain/models/subscription_models.dart';
 
-class SubscriptionScreen extends StatefulWidget {
+class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
-}
-
-class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  bool processing = false;
-
-  Future<void> _subscribe(String plan, int amount) async {
-    setState(() => processing = true);
-
-    try {
-      // Payment integration will be connected here.
-      await Future<void>.delayed(const Duration(milliseconds: 700));
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '$plan selected — payment of KSh $amount will be processed.',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => processing = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscription = ref.watch(currentSubscriptionProvider);
+    final plans = ref.watch(subscriptionPlansProvider);
+    final transactions = ref.watch(paymentTransactionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Subscription'),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose your plan',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Unlock more powerful invoicing features as your business grows.',
-                    style: theme.textTheme.bodyLarge,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  _CurrentPlanCard(),
-
-                  const SizedBox(height: 32),
-
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= 800;
-
-                      final cards = [
-                        _PlanCard(
-                          name: 'Free',
-                          price: '0',
-                          description: 'For getting started',
-                          features: const [
-                            'Up to 10 invoices',
-                            'Customer management',
-                            'Basic invoice PDF',
-                            'Local data',
-                          ],
-                          buttonText: 'Current plan',
-                          enabled: false,
-                          onPressed: null,
-                        ),
-                        _PlanCard(
-                          name: 'Starter',
-                          price: '500',
-                          description: 'For growing businesses',
-                          features: const [
-                            'Unlimited invoices',
-                            'Cloud backup & sync',
-                            'Professional PDF invoices',
-                            'Customer history',
-                            'Reports',
-                          ],
-                          buttonText: 'Upgrade',
-                          onPressed: processing
-                              ? null
-                              : () => _subscribe('Starter', 500),
-                        ),
-                        _PlanCard(
-                          name: 'Business',
-                          price: '1,000',
-                          description: 'For active businesses',
-                          highlighted: true,
-                          features: const [
-                            'Everything in Starter',
-                            'Online invoices',
-                            'Payment links',
-                            'Advanced reports',
-                            'Priority features',
-                          ],
-                          buttonText: 'Upgrade',
-                          onPressed: processing
-                              ? null
-                              : () => _subscribe('Business', 1000),
-                        ),
-                      ];
-
-                      if (wide) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: cards
-                              .map(
-                                (card) => Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 16),
-                                    child: card,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        );
-                      }
-
-                      return Column(
-                        children: cards
-                            .map(
-                              (card) => Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: card,
-                              ),
-                            )
-                            .toList(),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  _PaymentInfoCard(),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CurrentPlanCard extends StatelessWidget {
-  const _CurrentPlanCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
+      appBar: AppBar(title: const Text('Subscription')),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(currentSubscriptionProvider);
+          ref.invalidate(subscriptionPlansProvider);
+          ref.invalidate(paymentTransactionsProvider);
+          await ref.read(currentSubscriptionProvider.future);
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(20),
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                Icons.workspace_premium_outlined,
-                color: theme.colorScheme.primary,
-              ),
+            _HeroCard(subscription: subscription.valueOrNull),
+            const SizedBox(height: 24),
+            Text('Choose your plan', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 6),
+            Text('Simple KSh pricing. Full invoicing, customer, catalogue, reporting and cloud-sync access while your subscription is active.'),
+            const SizedBox(height: 18),
+            plans.when(
+              loading: () => const Center(child: Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator())),
+              error: (e, _) => _ErrorCard(message: e.toString(), onRetry: () => ref.invalidate(subscriptionPlansProvider)),
+              data: (items) => LayoutBuilder(builder: (context, c) {
+                final paid = items.where((p) => p.isActive && !p.isTrial).toList();
+                final cards = paid.map((plan) => _PlanCard(plan: plan, onSubscribe: () => _startPayment(context, ref, plan))).toList();
+                if (c.maxWidth >= 760) return Row(crossAxisAlignment: CrossAxisAlignment.start, children: cards.map((x) => Expanded(child: Padding(padding: const EdgeInsets.only(right: 12), child: x))).toList());
+                return Column(children: cards.map((x) => Padding(padding: const EdgeInsets.only(bottom: 12), child: x)).toList());
+              }),
             ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current plan',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Free plan',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Chip(
-              label: Text('Active'),
+            const SizedBox(height: 22),
+            Card(child: Padding(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [Icon(Icons.verified_user_outlined, color: Theme.of(context).colorScheme.primary), const SizedBox(width: 10), const Text('Subscription protection', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16))]),
+              const SizedBox(height: 10),
+              const Text('Subscription status is checked by Supabase. The app cannot mark a payment as completed or unlock paid access from the client.'),
+            ]))),
+            const SizedBox(height: 18),
+            transactions.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (items) => items.isEmpty ? const SizedBox.shrink() : Card(child: Padding(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Recent payment requests', style: TextStyle(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 8),
+                ...items.take(5).map((tx) => ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.receipt_long_outlined), title: Text('${tx.currency} ${tx.amount.toStringAsFixed(0)}'), subtitle: Text('${tx.status.name} • ${tx.createdAt.toLocal()}'))),
+              ]))),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _startPayment(BuildContext context, WidgetRef ref, SubscriptionPlan plan) async {
+    try {
+      final tx = await ref.read(subscriptionRepositoryProvider).createPaymentIntent(plan.code);
+      ref.invalidate(paymentTransactionsProvider);
+      if (!context.mounted) return;
+      await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
+        title: Text('${plan.name} payment request'),
+        content: Text('Payment request created for KSh ${plan.price.toStringAsFixed(0)}.\n\nPay via M-Pesa Till 1658309, then provide the M-Pesa transaction reference for verification. Your subscription will only become active after server-side payment verification.'),
+        actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done'))],
+      ));
+      debugPrint('InvoiceEasy payment intent: ${tx.id}');
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not start payment: $e')));
+    }
+  }
+}
+
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({required this.subscription});
+  final Subscription? subscription;
+  @override
+  Widget build(BuildContext context) {
+    final sub = subscription;
+    final status = sub == null ? 'No subscription' : switch (sub.status) {
+      SubscriptionStatus.trialing => 'Free trial',
+      SubscriptionStatus.active => 'Active',
+      SubscriptionStatus.expired => 'Expired',
+      SubscriptionStatus.cancelled => 'Cancelled',
+      SubscriptionStatus.pastDue => 'Payment due',
+      SubscriptionStatus.none => 'No subscription',
+    };
+    final days = sub?.daysRemaining;
+    return Card(child: Container(padding: const EdgeInsets.all(22), decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primaryContainer, Theme.of(context).colorScheme.surface])), child: Row(children: [
+      Container(width: 52, height: 52, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(16)), child: Icon(Icons.workspace_premium_rounded, color: Theme.of(context).colorScheme.onPrimary)),
+      const SizedBox(width: 15),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(status, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)), const SizedBox(height: 4), Text(days == null ? 'Subscription access is controlled securely.' : days == 1 ? '1 day remaining' : '$days days remaining')]))
+    ])));
   }
 }
 
 class _PlanCard extends StatelessWidget {
-  const _PlanCard({
-    required this.name,
-    required this.price,
-    required this.description,
-    required this.features,
-    required this.buttonText,
-    required this.onPressed,
-    this.highlighted = false,
-    this.enabled = true,
-  });
-
-  final String name;
-  final String price;
-  final String description;
-  final List<String> features;
-  final String buttonText;
-  final VoidCallback? onPressed;
-  final bool highlighted;
-  final bool enabled;
-
+  const _PlanCard({required this.plan, required this.onSubscribe});
+  final SubscriptionPlan plan;
+  final VoidCallback onSubscribe;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          border: highlighted
-              ? Border.all(
-                  color: theme.colorScheme.primary,
-                  width: 2,
-                )
-              : null,
-        ),
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (highlighted)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'RECOMMENDED',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-
-            if (highlighted) const SizedBox(height: 14),
-
-            Text(
-              name,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            Text(description),
-
-            const SizedBox(height: 18),
-
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'KSh $price',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                if (price != '0')
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 5, left: 5),
-                    child: Text('/month'),
-                  ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            const Divider(),
-
-            const SizedBox(height: 10),
-
-            ...features.map(
-              (feature) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      size: 19,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(child: Text(feature)),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: enabled ? onPressed : null,
-                child: Text(buttonText),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    final annual = plan.isAnnual;
+    return Card(clipBehavior: Clip.antiAlias, child: Container(padding: const EdgeInsets.all(22), decoration: BoxDecoration(border: annual ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2) : null), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (annual) Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(20)), child: Text('BEST VALUE', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 11, fontWeight: FontWeight.w900))),
+      if (annual) const SizedBox(height: 12),
+      Text(plan.name, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+      const SizedBox(height: 6),
+      Text(plan.description ?? ''),
+      const SizedBox(height: 16),
+      Text('KSh ${plan.price.toStringAsFixed(0)}', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+      Text(annual ? 'per year • KSh 166.67/month equivalent' : 'per month'),
+      if (annual) const Padding(padding: EdgeInsets.only(top: 6), child: Text('Save KSh 400 vs monthly billing', style: TextStyle(fontWeight: FontWeight.w800))),
+      const SizedBox(height: 16),
+      const Divider(),
+      const SizedBox(height: 8),
+      ...const ['Unlimited invoices', 'Customers & products', 'Professional PDF invoices', 'Cloud backup & sync', 'Reports & business records'].map((x) => Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: Row(children: [Icon(Icons.check_circle_outline, size: 19), const SizedBox(width: 9), Expanded(child: Text(x))]))),
+      const SizedBox(height: 14),
+      SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: onSubscribe, icon: const Icon(Icons.payments_outlined), label: const Text('Continue to payment')),
+    )])));
   }
 }
 
-class _PaymentInfoCard extends StatelessWidget {
-  const _PaymentInfoCard();
-
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.lock_outline,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Secure payments',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Pay securely using M-Pesa. Your subscription is linked to your InvoiceEasy account.',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(18), child: Column(children: [const Text('Unable to load plans'), const SizedBox(height: 6), Text(message), const SizedBox(height: 10), OutlinedButton(onPressed: onRetry, child: const Text('Retry'))])));
 }

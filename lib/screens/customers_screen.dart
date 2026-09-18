@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/guards/subscription_action_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -174,6 +175,7 @@ class _CustomersState extends ConsumerState<CustomersScreen> {
   }
 
   Future<void> _edit(Customer? old) async {
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     final result = await showDialog<Customer>(
       context: context,
       builder: (_) => CustomerFormDialog(initial: old),
@@ -184,6 +186,7 @@ class _CustomersState extends ConsumerState<CustomersScreen> {
   }
 
   Future<void> _delete(Customer customer) async {
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(

@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:invoice_easy/main.dart';
 import 'package:invoice_easy/services/local_store.dart';
+import 'package:invoice_easy/services/connectivity_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:invoice_easy/providers/app_providers.dart';
 
 void main() {
   setUp(() async {
@@ -15,7 +18,18 @@ void main() {
   });
 
   testWidgets('shows the dashboard and switches to invoices', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: InvoiceEasyApp()));
+    final connectivity = ConnectivityService(
+      checkConnectivity: () async => [ConnectivityResult.wifi],
+      reachabilityProbe: () async => true,
+    );
+    connectivity.state = ConnectivityState.online;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connectivityProvider.overrideWith((ref) => connectivity)],
+        child: const InvoiceEasyApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Dashboard'), findsOneWidget);
@@ -29,3 +43,4 @@ void main() {
     );
   });
 }
+

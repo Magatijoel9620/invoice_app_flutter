@@ -1,7 +1,7 @@
 name: invoice_easy
 description: InvoiceEasy - cross-business invoicing for small businesses, freelancers and professionals.
 publish_to: 'none'
-version: 3.0.0+1
+version: 3.0.0+2
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -21,6 +21,8 @@ dependencies:
   path_provider: ^2.1.5
   supabase_flutter: ^2.15.4
   file_picker: ^8.1.7
+  connectivity_plus: ^6.1.5
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

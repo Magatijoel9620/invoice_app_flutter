@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
 
+import 'sync_queue.dart';
+
 enum SyncState { offline, idle, syncing, success, error }
 
 class SyncStatus extends ChangeNotifier {
   SyncState state = SyncState.idle;
   int pending = 0;
+  int failed = 0;
   String? message;
   DateTime? lastSyncedAt;
 
@@ -14,10 +17,19 @@ class SyncStatus extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPending(int value) {
-    if (pending == value) return;
+  void setPending(int value, {int? failed}) {
+    final changed = pending != value || (failed != null && this.failed != failed);
     pending = value;
-    notifyListeners();
+    if (failed != null) this.failed = failed;
+    if (changed) notifyListeners();
+  }
+
+  Future<void> refreshFromQueue(SyncQueue queue) async {
+    final items = await queue.all();
+    setPending(
+      items.length,
+      failed: items.where((item) => item.lastError != null).length,
+    );
   }
 
   void markSynced() {

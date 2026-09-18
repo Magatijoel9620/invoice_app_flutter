@@ -39,6 +39,22 @@ class LocalStore {
       if (value is double) await prefs.setDouble(scoped, value);
       if (value is bool) await prefs.setBool(scoped, value);
     }
+
+    // Preserve the existing V1 queue when upgrading to the richer V2 queue.
+    final v1 = '$_scopeKey/$_anonymousScope/ie_sync_queue_v1';
+    final v2 = '$_scopeKey/$_anonymousScope/ie_sync_queue_v2';
+    if (!prefs.containsKey(v2) && prefs.containsKey(v1)) {
+      final value = prefs.getString(v1);
+      if (value != null) await prefs.setString(v2, value);
+    }
+
+    // Also migrate the queue in the currently selected authenticated scope.
+    final currentV1 = '$_scopeKey/$_scope/ie_sync_queue_v1';
+    final currentV2 = '$_scopeKey/$_scope/ie_sync_queue_v2';
+    if (!prefs.containsKey(currentV2) && prefs.containsKey(currentV1)) {
+      final value = prefs.getString(currentV1);
+      if (value != null) await prefs.setString(currentV2, value);
+    }
   }
 
   static String get currentScope => _scope;
@@ -61,6 +77,7 @@ class LocalStore {
         _productsKey,
         _invoicesKey,
         'ie_sync_queue_v1',
+        'ie_sync_queue_v2',
       ]) {
         final from = '$_scopeKey/$_anonymousScope/$key';
         final to = '$_scopeKey/$targetScope/$key';

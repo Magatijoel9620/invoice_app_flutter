@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/guards/subscription_action_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/formatters.dart';
 import '../providers/app_providers.dart';
@@ -55,6 +56,7 @@ class ArchivedInvoicesScreen extends ConsumerWidget {
                   trailing: PopupMenuButton<String>(
                     onSelected: (v) async {
                       if (v == 'restore') {
+                        if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
                         await ref
                             .read(invoicesProvider.notifier)
                             .upsert(invoice.copyWith(archived: false));
@@ -80,6 +82,7 @@ class ArchivedInvoicesScreen extends ConsumerWidget {
                         );
                         if (!context.mounted) return;
                         if (ok == true) {
+                          if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
                           await ref
                               .read(invoicesProvider.notifier)
                               .delete(invoice.id);

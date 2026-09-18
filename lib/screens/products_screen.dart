@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/guards/subscription_action_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/product.dart';
@@ -113,6 +114,7 @@ class ProductsScreen extends ConsumerWidget {
     WidgetRef ref,
     ProductItem? old,
   ) async {
+    if (!SubscriptionActionGuard.requireWrite(c, ref)) return;
     final name = TextEditingController(text: old?.name ?? '');
     final price = TextEditingController(text: old?.price.toString() ?? '');
     final result = await showDialog<ProductItem>(

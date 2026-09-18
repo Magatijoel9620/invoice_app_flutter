@@ -10,6 +10,7 @@ import '../screens/products_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/account/account_screen.dart';
 import '../screens/sync_status_banner.dart';
+import '../core/widgets/subscription_banner.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.onThemeModeChanged});
@@ -123,6 +124,7 @@ class _AppShellState extends State<AppShell> {
       body: Column(
         children: [
           const SyncStatusBanner(),
+          const SubscriptionBanner(),
           Expanded(child: pages[index]),
         ],
       ),
@@ -162,10 +164,13 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  void _create() => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const CreateInvoiceScreen()),
-      );
+  void _create() {
+    // The create screen performs the final subscription check before saving.
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateInvoiceScreen()),
+    );
+  }
 
   void _open(Widget page) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => page));

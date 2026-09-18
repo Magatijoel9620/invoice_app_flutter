@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import '../core/guards/subscription_action_guard.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -435,6 +436,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
         status: InvoiceStatus.draft,
         archived: false,
       );
+      if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
       await ref.read(invoicesProvider.notifier).upsert(copy);
       await ref.read(businessProvider.notifier).save(
             business.copyWith(
@@ -490,6 +492,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
     );
     if (ok != true) return;
 
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     await ref.read(invoicesProvider.notifier).upsert(
           invoice.copyWith(status: status),
         );
@@ -497,6 +500,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
   }
 
   Future<void> _archive(Invoice invoice) async {
+    if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
     await ref.read(invoicesProvider.notifier).upsert(
           invoice.copyWith(archived: true),
         );
@@ -534,6 +538,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
             invoice.payments.where((item) => item.id != payment.id).toList(),
         status: InvoiceStatus.sent,
       );
+      if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
       await ref.read(invoicesProvider.notifier).upsert(updated);
       if (mounted) setState(() {});
     }
@@ -633,6 +638,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
           ? InvoiceStatus.paid
           : InvoiceStatus.partiallyPaid;
 
+      if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
       await ref.read(invoicesProvider.notifier).upsert(
             invoice.copyWith(payments: payments, status: status),
           );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:invoice_easy/screens/auth/auth_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/app_providers.dart';
 import '../../services/cloud_config.dart';
@@ -86,24 +87,46 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   Future<void> _signOut() async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Sign out?'),
         content: const Text(
-          'Your local invoices stay on this device. Cloud sync will stop until you sign in again.',
+          'Your local invoices stay on this device. '
+          'Cloud sync will stop until you sign in again.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('Sign out'),
           ),
         ],
       ),
     );
-    if (ok == true) await ref.read(authServiceProvider).signOut();
+
+    if (ok != true || !mounted) return;
+
+    try {
+      await ref.read(authServiceProvider).signOut();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not sign out: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _deleteAccount() async {

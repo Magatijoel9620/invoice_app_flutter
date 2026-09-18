@@ -69,3 +69,25 @@ See `SUPABASE_SETUP.md` for the complete setup walkthrough.
 - Cloud account deletion through the Edge Function
 
 See `SUPABASE_SETUP.md` for deployment and migration instructions.
+
+## Subscription hardening (2.6)
+
+InvoiceEasy now includes the Landlord Ledger-style subscription hardening adapted to its single-business architecture. The default plans are KSh 200/month and KSh 2,000/year, plus a 14-day trial. Subscription state and paid-write authorization are enforced in Supabase; the Flutter client cannot self-activate a subscription. See `SUBSCRIPTION_HARDENING.md` and migration `supabase/migrations/20260914_invoice_easy_subscription_hardening.sql`.
+
+## Offline-first connectivity
+
+InvoiceEasy now includes a reusable connectivity and synchronization layer:
+
+- `ConnectivityService` detects transport plus actual HTTP reachability.
+- Connectivity is exposed through Riverpod.
+- Lifecycle resume and periodic reachability checks are supported.
+- The global sync banner shows checking/offline/syncing/pending/error states.
+- Returning online triggers automatic synchronization.
+- Local mutations automatically trigger sync when the app is online.
+- `SyncQueue` persists pending mutations and retry metadata.
+- Exponential retry/backoff and failed-operation visibility are supported.
+- Existing last-write-wins conflict resolution and cloud tombstones remain intact.
+- The app remains usable when the network is unavailable.
+
+See `docs/offline_first_connectivity.md` for the architecture and Farmora
+porting notes.
