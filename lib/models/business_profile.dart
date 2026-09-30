@@ -88,29 +88,30 @@ class BusinessProfile {
   );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'businessType': businessType,
-        'phone': phone,
-        'email': email,
-        'address': address,
-        'kraPin': kraPin,
-        'currency': currency,
-        'invoicePrefix': invoicePrefix,
-        'nextInvoiceNumber': nextInvoiceNumber,
-        'defaultDueDays': defaultDueDays,
-        'vatRegistered': vatRegistered,
-        'vatRate': vatRate,
-        'logoPath': logoPath,
-        'thankYouMessage': thankYouMessage,
-        'mpesaTill': mpesaTill,
-        'paybill': paybill,
-        'bankName': bankName,
-        'bankAccount': bankAccount,
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'businessType': businessType,
+    'phone': phone,
+    'email': email,
+    'address': address,
+    'kraPin': kraPin,
+    'currency': currency,
+    'invoicePrefix': invoicePrefix,
+    'nextInvoiceNumber': nextInvoiceNumber,
+    'defaultDueDays': defaultDueDays,
+    'vatRegistered': vatRegistered,
+    'vatRate': vatRate,
+    'logoPath': logoPath,
+    'thankYouMessage': thankYouMessage,
+    'mpesaTill': mpesaTill,
+    'paybill': paybill,
+    'bankName': bankName,
+    'bankAccount': bankAccount,
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
-  factory BusinessProfile.fromJson(Map<String, dynamic> json) => BusinessProfile(
+  factory BusinessProfile.fromJson(Map<String, dynamic> json) =>
+      BusinessProfile(
         id: json['id']?.toString() ?? 'default',
         name: json['name']?.toString() ?? 'My Business',
         businessType: json['businessType']?.toString() ?? 'Other',
@@ -125,11 +126,15 @@ class BusinessProfile {
         vatRegistered: json['vatRegistered'] as bool? ?? false,
         vatRate: (json['vatRate'] as num?)?.toDouble() ?? 16,
         logoPath: json['logoPath']?.toString() ?? '',
-        thankYouMessage: json['thankYouMessage']?.toString() ?? 'Thank you for your business!',
+        thankYouMessage:
+            json['thankYouMessage']?.toString() ??
+            'Thank you for your business!',
         mpesaTill: json['mpesaTill']?.toString() ?? '',
         paybill: json['paybill']?.toString() ?? '',
         bankName: json['bankName']?.toString() ?? '',
         bankAccount: json['bankAccount']?.toString() ?? '',
-        updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime(2000, 1, 1),
+        updatedAt:
+            DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+            DateTime(2000, 1, 1),
       );
 }

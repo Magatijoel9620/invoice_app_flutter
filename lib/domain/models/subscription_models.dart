@@ -1,6 +1,12 @@
 enum SubscriptionStatus { trialing, active, expired, cancelled, pastDue, none }
 
-enum PaymentTransactionStatus { pending, completed, failed, cancelled, refunded }
+enum PaymentTransactionStatus {
+  pending,
+  completed,
+  failed,
+  cancelled,
+  refunded,
+}
 
 class SubscriptionPlan {
   const SubscriptionPlan({
@@ -31,7 +37,8 @@ class SubscriptionPlan {
   bool get isFree => price <= 0;
   bool get isAnnual => code == 'annual';
 
-  factory SubscriptionPlan.fromJson(Map<String, dynamic> json) => SubscriptionPlan(
+  factory SubscriptionPlan.fromJson(Map<String, dynamic> json) =>
+      SubscriptionPlan(
         id: json['id'] as String,
         code: json['code'] as String,
         name: json['name'] as String,
@@ -72,8 +79,11 @@ class Subscription {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  bool get hasAccess => status == SubscriptionStatus.trialing || status == SubscriptionStatus.active;
-  DateTime? get accessEndsAt => status == SubscriptionStatus.trialing ? trialEndsAt : expiresAt;
+  bool get hasAccess =>
+      status == SubscriptionStatus.trialing ||
+      status == SubscriptionStatus.active;
+  DateTime? get accessEndsAt =>
+      status == SubscriptionStatus.trialing ? trialEndsAt : expiresAt;
   int? get daysRemaining {
     final end = accessEndsAt;
     if (end == null) return null;
@@ -82,27 +92,33 @@ class Subscription {
   }
 
   factory Subscription.fromJson(Map<String, dynamic> json) => Subscription(
-        id: json['id'] as String,
-        ownerId: json['owner_id'] as String,
-        planId: json['plan_id'] as String,
-        status: _status(json['status'] as String),
-        startedAt: DateTime.parse(json['started_at'] as String),
-        expiresAt: json['expires_at'] == null ? null : DateTime.parse(json['expires_at'] as String),
-        cancelledAt: json['cancelled_at'] == null ? null : DateTime.parse(json['cancelled_at'] as String),
-        autoRenew: json['auto_renew'] as bool? ?? false,
-        trialEndsAt: json['trial_ends_at'] == null ? null : DateTime.parse(json['trial_ends_at'] as String),
-        createdAt: DateTime.parse(json['created_at'] as String),
-        updatedAt: DateTime.parse(json['updated_at'] as String),
-      );
+    id: json['id'] as String,
+    ownerId: json['owner_id'] as String,
+    planId: json['plan_id'] as String,
+    status: _status(json['status'] as String),
+    startedAt: DateTime.parse(json['started_at'] as String),
+    expiresAt: json['expires_at'] == null
+        ? null
+        : DateTime.parse(json['expires_at'] as String),
+    cancelledAt: json['cancelled_at'] == null
+        ? null
+        : DateTime.parse(json['cancelled_at'] as String),
+    autoRenew: json['auto_renew'] as bool? ?? false,
+    trialEndsAt: json['trial_ends_at'] == null
+        ? null
+        : DateTime.parse(json['trial_ends_at'] as String),
+    createdAt: DateTime.parse(json['created_at'] as String),
+    updatedAt: DateTime.parse(json['updated_at'] as String),
+  );
 
   static SubscriptionStatus _status(String value) => switch (value) {
-        'trialing' => SubscriptionStatus.trialing,
-        'active' => SubscriptionStatus.active,
-        'expired' => SubscriptionStatus.expired,
-        'cancelled' => SubscriptionStatus.cancelled,
-        'past_due' => SubscriptionStatus.pastDue,
-        _ => SubscriptionStatus.none,
-      };
+    'trialing' => SubscriptionStatus.trialing,
+    'active' => SubscriptionStatus.active,
+    'expired' => SubscriptionStatus.expired,
+    'cancelled' => SubscriptionStatus.cancelled,
+    'past_due' => SubscriptionStatus.pastDue,
+    _ => SubscriptionStatus.none,
+  };
 }
 
 class PaymentTransaction {
@@ -142,7 +158,8 @@ class PaymentTransaction {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  factory PaymentTransaction.fromJson(Map<String, dynamic> json) => PaymentTransaction(
+  factory PaymentTransaction.fromJson(Map<String, dynamic> json) =>
+      PaymentTransaction(
         id: json['id'] as String,
         ownerId: json['owner_id'] as String,
         subscriptionId: json['subscription_id'] as String?,
@@ -154,14 +171,19 @@ class PaymentTransaction {
         currency: json['currency'] as String? ?? 'KES',
         status: _paymentStatus(json['status'] as String),
         paymentMethod: json['payment_method'] as String?,
-        paidAt: json['paid_at'] == null ? null : DateTime.parse(json['paid_at'] as String),
+        paidAt: json['paid_at'] == null
+            ? null
+            : DateTime.parse(json['paid_at'] as String),
         failureReason: json['failure_reason'] as String?,
-        metadata: json['metadata'] == null ? <String, dynamic>{} : Map<String, dynamic>.from(json['metadata'] as Map),
+        metadata: json['metadata'] == null
+            ? <String, dynamic>{}
+            : Map<String, dynamic>.from(json['metadata'] as Map),
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
       );
 
-  static PaymentTransactionStatus _paymentStatus(String value) => switch (value) {
+  static PaymentTransactionStatus _paymentStatus(String value) =>
+      switch (value) {
         'pending' => PaymentTransactionStatus.pending,
         'completed' => PaymentTransactionStatus.completed,
         'failed' => PaymentTransactionStatus.failed,

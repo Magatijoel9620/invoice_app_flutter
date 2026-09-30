@@ -18,7 +18,8 @@ class SyncStatus extends ChangeNotifier {
   }
 
   void setPending(int value, {int? failed}) {
-    final changed = pending != value || (failed != null && this.failed != failed);
+    final changed =
+        pending != value || (failed != null && this.failed != failed);
     pending = value;
     if (failed != null) this.failed = failed;
     if (changed) notifyListeners();

@@ -30,7 +30,9 @@ void main() {
   test('product edits replace local data immediately', () async {
     final repository = ProductRepository();
     await repository.upsert(ProductItem(id: 'p1', name: 'Service', price: 100));
-    await repository.upsert(ProductItem(id: 'p1', name: 'Updated Service', price: 250));
+    await repository.upsert(
+      ProductItem(id: 'p1', name: 'Updated Service', price: 250),
+    );
 
     final items = await repository.all();
     expect(items, hasLength(1));

@@ -6,7 +6,12 @@ class AccountProfile {
   final String email;
   final String fullName;
   final String phone;
-  const AccountProfile({required this.id, required this.email, this.fullName = '', this.phone = ''});
+  const AccountProfile({
+    required this.id,
+    required this.email,
+    this.fullName = '',
+    this.phone = '',
+  });
 }
 
 class AccountProfileService {
@@ -14,11 +19,17 @@ class AccountProfileService {
 
   Future<AccountProfile> get() async {
     final user = _client.auth.currentUser!;
-    final row = await _client.from('profiles').select().eq('id', user.id).maybeSingle();
+    final row = await _client
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
     return AccountProfile(
       id: user.id,
       email: user.email ?? '',
-      fullName: row?['full_name'] as String? ?? (user.userMetadata?['full_name'] as String? ?? ''),
+      fullName:
+          row?['full_name'] as String? ??
+          (user.userMetadata?['full_name'] as String? ?? ''),
       phone: row?['phone'] as String? ?? '',
     );
   }

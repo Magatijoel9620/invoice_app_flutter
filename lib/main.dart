@@ -9,7 +9,6 @@ import 'core/providers/subscription_providers.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/business_setup_screen.dart';
 import 'services/auth_service.dart';
-import 'services/connectivity_service.dart';
 import 'services/cloud_config.dart';
 import 'services/local_store.dart';
 import 'services/migration_service.dart';
@@ -23,12 +22,9 @@ Future<void> main() async {
   await SupabaseService.initialize();
 
   runApp(
-    const ProviderScope(
-      child: _ConnectivityStartup(child: InvoiceEasyApp()),
-    ),
+    const ProviderScope(child: _ConnectivityStartup(child: InvoiceEasyApp())),
   );
 }
-
 
 class _ConnectivityStartup extends ConsumerStatefulWidget {
   const _ConnectivityStartup({required this.child});
@@ -36,7 +32,8 @@ class _ConnectivityStartup extends ConsumerStatefulWidget {
   final Widget child;
 
   @override
-  ConsumerState<_ConnectivityStartup> createState() => _ConnectivityStartupState();
+  ConsumerState<_ConnectivityStartup> createState() =>
+      _ConnectivityStartupState();
 }
 
 class _ConnectivityStartupState extends ConsumerState<_ConnectivityStartup> {

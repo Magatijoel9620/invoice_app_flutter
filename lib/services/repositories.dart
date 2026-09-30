@@ -19,19 +19,30 @@ class BusinessRepository {
     final value = business.copyWith(updatedAt: DateTime.now().toUtc());
     await LocalStore.writeObject(key, value.toJson());
     if (queue) {
-      await _queue.enqueue(PendingChange(entity: 'business', id: value.id, operation: 'upsert', updatedAt: value.updatedAt, payload: value.toJson()));
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'business',
+          id: value.id,
+          operation: 'upsert',
+          updatedAt: value.updatedAt,
+          payload: value.toJson(),
+        ),
+      );
     }
   }
 
-  Future<void> replace(BusinessProfile business) => LocalStore.writeObject(key, business.toJson());
+  Future<void> replace(BusinessProfile business) =>
+      LocalStore.writeObject(key, business.toJson());
 }
 
 class CustomerRepository {
   static const key = 'ie_customers_v2';
   final SyncQueue _queue = SyncQueue();
 
-  Future<List<Customer>> all() async => (await LocalStore.readList(key)).map(Customer.fromJson).toList();
-  Future<void> saveAll(List<Customer> value) => LocalStore.writeList(key, value.map((e) => e.toJson()).toList());
+  Future<List<Customer>> all() async =>
+      (await LocalStore.readList(key)).map(Customer.fromJson).toList();
+  Future<void> saveAll(List<Customer> value) =>
+      LocalStore.writeList(key, value.map((e) => e.toJson()).toList());
 
   Future<void> upsert(Customer customer, {bool queue = true}) async {
     final value = customer.copyWith(updatedAt: DateTime.now().toUtc());
@@ -43,7 +54,17 @@ class CustomerRepository {
       allItems[index] = value;
     }
     await saveAll(allItems);
-    if (queue) await _queue.enqueue(PendingChange(entity: 'customer', id: value.id, operation: 'upsert', updatedAt: value.updatedAt, payload: value.toJson()));
+    if (queue) {
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'customer',
+          id: value.id,
+          operation: 'upsert',
+          updatedAt: value.updatedAt,
+          payload: value.toJson(),
+        ),
+      );
+    }
   }
 
   Future<void> replace(Customer customer) async {
@@ -61,7 +82,16 @@ class CustomerRepository {
     final items = await all();
     items.removeWhere((x) => x.id == id);
     await saveAll(items);
-    if (queue) await _queue.enqueue(PendingChange(entity: 'customer', id: id, operation: 'delete', updatedAt: DateTime.now().toUtc()));
+    if (queue) {
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'customer',
+          id: id,
+          operation: 'delete',
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
   }
 }
 
@@ -69,8 +99,10 @@ class ProductRepository {
   static const key = 'ie_products_v2';
   final SyncQueue _queue = SyncQueue();
 
-  Future<List<ProductItem>> all() async => (await LocalStore.readList(key)).map(ProductItem.fromJson).toList();
-  Future<void> saveAll(List<ProductItem> value) => LocalStore.writeList(key, value.map((e) => e.toJson()).toList());
+  Future<List<ProductItem>> all() async =>
+      (await LocalStore.readList(key)).map(ProductItem.fromJson).toList();
+  Future<void> saveAll(List<ProductItem> value) =>
+      LocalStore.writeList(key, value.map((e) => e.toJson()).toList());
 
   Future<void> upsert(ProductItem product, {bool queue = true}) async {
     final value = product.copyWith(updatedAt: DateTime.now().toUtc());
@@ -82,7 +114,17 @@ class ProductRepository {
       items[index] = value;
     }
     await saveAll(items);
-    if (queue) await _queue.enqueue(PendingChange(entity: 'product', id: value.id, operation: 'upsert', updatedAt: value.updatedAt, payload: value.toJson()));
+    if (queue) {
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'product',
+          id: value.id,
+          operation: 'upsert',
+          updatedAt: value.updatedAt,
+          payload: value.toJson(),
+        ),
+      );
+    }
   }
 
   Future<void> replace(ProductItem product) async {
@@ -100,7 +142,16 @@ class ProductRepository {
     final items = await all();
     items.removeWhere((x) => x.id == id);
     await saveAll(items);
-    if (queue) await _queue.enqueue(PendingChange(entity: 'product', id: id, operation: 'delete', updatedAt: DateTime.now().toUtc()));
+    if (queue) {
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'product',
+          id: id,
+          operation: 'delete',
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
   }
 }
 
@@ -110,12 +161,15 @@ class InvoiceRepository {
   final SyncQueue _queue = SyncQueue();
 
   Future<List<Invoice>> all() async {
-    final value = (await LocalStore.readList(key)).map(Invoice.fromJson).toList();
+    final value = (await LocalStore.readList(
+      key,
+    )).map(Invoice.fromJson).toList();
     value.sort((a, b) => b.issueDate.compareTo(a.issueDate));
     return value;
   }
 
-  Future<void> saveAll(List<Invoice> value) => LocalStore.writeList(key, value.map((e) => e.toJson()).toList());
+  Future<void> saveAll(List<Invoice> value) =>
+      LocalStore.writeList(key, value.map((e) => e.toJson()).toList());
 
   Future<void> upsert(Invoice invoice, {bool queue = true}) async {
     final value = invoice.copyWith(updatedAt: DateTime.now().toUtc());
@@ -127,7 +181,17 @@ class InvoiceRepository {
       items[index] = value;
     }
     await saveAll(items);
-    if (queue) await _queue.enqueue(PendingChange(entity: 'invoice', id: value.id, operation: 'upsert', updatedAt: value.updatedAt, payload: value.toJson()));
+    if (queue) {
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'invoice',
+          id: value.id,
+          operation: 'upsert',
+          updatedAt: value.updatedAt,
+          payload: value.toJson(),
+        ),
+      );
+    }
   }
 
   Future<void> replace(Invoice invoice) async {
@@ -147,6 +211,15 @@ class InvoiceRepository {
     final items = await all();
     items.removeWhere((x) => x.id == id);
     await saveAll(items);
-    if (queue) await _queue.enqueue(PendingChange(entity: 'invoice', id: id, operation: 'delete', updatedAt: DateTime.now().toUtc()));
+    if (queue) {
+      await _queue.enqueue(
+        PendingChange(
+          entity: 'invoice',
+          id: id,
+          operation: 'delete',
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
   }
 }

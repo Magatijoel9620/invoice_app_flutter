@@ -21,8 +21,7 @@ class InvoiceDetailsScreen extends ConsumerStatefulWidget {
   const InvoiceDetailsScreen({super.key, required this.invoiceId});
 
   @override
-  ConsumerState<InvoiceDetailsScreen> createState() =>
-      _InvoiceDetailsState();
+  ConsumerState<InvoiceDetailsScreen> createState() => _InvoiceDetailsState();
 }
 
 class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
@@ -31,14 +30,17 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final invoices = ref.watch(invoicesProvider).valueOrNull ?? <Invoice>[];
-    final invoice = invoices.where((item) => item.id == widget.invoiceId).firstOrNull;
+    final invoice = invoices
+        .where((item) => item.id == widget.invoiceId)
+        .firstOrNull;
     final business = ref.watch(businessProvider).valueOrNull;
 
     if (invoice == null) {
       return const Scaffold(body: Center(child: Text('Invoice not found')));
     }
 
-    final b = business ??
+    final b =
+        business ??
         BusinessProfile(
           id: 'default',
           name: 'My Business',
@@ -183,8 +185,8 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  onPressed: balance <= 0.009 ||
-                          status == InvoiceStatus.cancelled
+                  onPressed:
+                      balance <= 0.009 || status == InvoiceStatus.cancelled
                       ? null
                       : () => _recordPayment(invoice),
                   icon: const Icon(Icons.add_card_outlined),
@@ -267,9 +269,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
           ),
           Text(
             paid ? 'Fully paid' : '${money.format(balance)} outstanding',
-            style: TextStyle(
-              color: colors.onPrimary.withValues(alpha: .82),
-            ),
+            style: TextStyle(color: colors.onPrimary.withValues(alpha: .82)),
           ),
           const SizedBox(height: 14),
           ClipRRect(
@@ -321,10 +321,9 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
           children: [
             Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 10),
             child,
@@ -376,26 +375,20 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
         onSelected: (value) =>
             _paymentAction(value, invoice, payment, business),
         itemBuilder: (_) => const [
-          PopupMenuItem(
-            value: 'receipt',
-            child: Text('Generate receipt'),
-          ),
-          PopupMenuItem(
-            value: 'delete',
-            child: Text('Delete payment'),
-          ),
+          PopupMenuItem(value: 'receipt', child: Text('Generate receipt')),
+          PopupMenuItem(value: 'delete', child: Text('Delete payment')),
         ],
       ),
     );
   }
 
   IconData _paymentIcon(PaymentMethod method) => switch (method) {
-        PaymentMethod.mpesa => Icons.phone_android,
-        PaymentMethod.bank => Icons.account_balance,
-        PaymentMethod.cash => Icons.payments_outlined,
-        PaymentMethod.card => Icons.credit_card,
-        PaymentMethod.other => Icons.receipt_long_outlined,
-      };
+    PaymentMethod.mpesa => Icons.phone_android,
+    PaymentMethod.bank => Icons.account_balance,
+    PaymentMethod.cash => Icons.payments_outlined,
+    PaymentMethod.card => Icons.credit_card,
+    PaymentMethod.other => Icons.receipt_long_outlined,
+  };
 
   Future<void> _action(
     String value,
@@ -403,11 +396,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
     BusinessProfile business,
   ) async {
     if (value == 'sent') {
-      await _setStatus(
-        invoice,
-        InvoiceStatus.sent,
-        'Mark invoice as sent?',
-      );
+      await _setStatus(invoice, InvoiceStatus.sent, 'Mark invoice as sent?');
       return;
     }
     if (value == 'viewed') {
@@ -438,7 +427,9 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
       );
       if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
       await ref.read(invoicesProvider.notifier).upsert(copy);
-      await ref.read(businessProvider.notifier).save(
+      await ref
+          .read(businessProvider.notifier)
+          .save(
             business.copyWith(
               nextInvoiceNumber: business.nextInvoiceNumber + 1,
             ),
@@ -454,11 +445,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
       return;
     }
     if (value == 'cancel') {
-      await _setStatus(
-        invoice,
-        InvoiceStatus.cancelled,
-        'Cancel invoice?',
-      );
+      await _setStatus(invoice, InvoiceStatus.cancelled, 'Cancel invoice?');
       return;
     }
     if (value == 'archive') {
@@ -491,19 +478,20 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
 
     if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
-    await ref.read(invoicesProvider.notifier).upsert(
-          invoice.copyWith(status: status),
-        );
+    await ref
+        .read(invoicesProvider.notifier)
+        .upsert(invoice.copyWith(status: status));
     if (mounted) setState(() {});
   }
 
   Future<void> _archive(Invoice invoice) async {
     if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
-    await ref.read(invoicesProvider.notifier).upsert(
-          invoice.copyWith(archived: true),
-        );
+    await ref
+        .read(invoicesProvider.notifier)
+        .upsert(invoice.copyWith(archived: true));
     if (mounted) Navigator.pop(context);
   }
 
@@ -534,8 +522,9 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
 
     if (value == 'delete') {
       final updated = invoice.copyWith(
-        payments:
-            invoice.payments.where((item) => item.id != payment.id).toList(),
+        payments: invoice.payments
+            .where((item) => item.id != payment.id)
+            .toList(),
         status: InvoiceStatus.sent,
       );
       if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
@@ -632,6 +621,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
       );
 
       if (result == null) return;
+      if (!mounted) return;
       final payments = [...invoice.payments, result];
       final remaining = invoice.balance(invoice.vatRate) - result.amount;
       final status = remaining <= 0.009
@@ -639,9 +629,9 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
           : InvoiceStatus.partiallyPaid;
 
       if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
-      await ref.read(invoicesProvider.notifier).upsert(
-            invoice.copyWith(payments: payments, status: status),
-          );
+      await ref
+          .read(invoicesProvider.notifier)
+          .upsert(invoice.copyWith(payments: payments, status: status));
       if (mounted) setState(() {});
     } finally {
       amount.dispose();
@@ -658,10 +648,7 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PdfPreviewScreen(
-            bytes: bytes,
-            title: invoice.number,
-          ),
+          builder: (_) => PdfPreviewScreen(bytes: bytes, title: invoice.number),
         ),
       );
     } finally {
@@ -674,11 +661,7 @@ class PdfPreviewScreen extends StatelessWidget {
   final Uint8List bytes;
   final String title;
 
-  const PdfPreviewScreen({
-    super.key,
-    required this.bytes,
-    required this.title,
-  });
+  const PdfPreviewScreen({super.key, required this.bytes, required this.title});
 
   @override
   Widget build(BuildContext context) {

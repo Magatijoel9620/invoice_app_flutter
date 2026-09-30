@@ -12,7 +12,11 @@ class CloudMapper {
     'deleted_at': null,
   };
 
-  static Map<String, dynamic> customer(Customer c, String userId, String businessId) => {
+  static Map<String, dynamic> customer(
+    Customer c,
+    String userId,
+    String businessId,
+  ) => {
     'id': c.id,
     'owner_id': userId,
     'business_id': businessId,
@@ -21,7 +25,11 @@ class CloudMapper {
     'deleted_at': null,
   };
 
-  static Map<String, dynamic> product(ProductItem p, String userId, String businessId) => {
+  static Map<String, dynamic> product(
+    ProductItem p,
+    String userId,
+    String businessId,
+  ) => {
     'id': p.id,
     'owner_id': userId,
     'business_id': businessId,
@@ -30,7 +38,11 @@ class CloudMapper {
     'deleted_at': null,
   };
 
-  static Map<String, dynamic> invoice(Invoice i, String userId, String businessId) => {
+  static Map<String, dynamic> invoice(
+    Invoice i,
+    String userId,
+    String businessId,
+  ) => {
     'id': i.id,
     'owner_id': userId,
     'business_id': businessId,

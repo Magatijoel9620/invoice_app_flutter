@@ -1,6 +1,15 @@
 import 'package:uuid/uuid.dart';
 
-enum InvoiceStatus { draft, sent, viewed, partiallyPaid, paid, overdue, cancelled }
+enum InvoiceStatus {
+  draft,
+  sent,
+  viewed,
+  partiallyPaid,
+  paid,
+  overdue,
+  cancelled,
+}
+
 enum PaymentMethod { mpesa, bank, cash, card, other }
 
 String _newId() => const Uuid().v4();
@@ -55,12 +64,12 @@ class InvoiceLine {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'description': description,
-        'quantity': quantity,
-        'unitPrice': unitPrice,
-        'taxable': taxable,
-      };
+    'id': id,
+    'description': description,
+    'quantity': quantity,
+    'unitPrice': unitPrice,
+    'taxable': taxable,
+  };
 
   factory InvoiceLine.fromJson(Map<String, dynamic> json) {
     return InvoiceLine(
@@ -91,13 +100,13 @@ class Payment {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'date': date.toIso8601String(),
-        'amount': amount,
-        'method': method.name,
-        'reference': reference,
-        'note': note,
-      };
+    'id': id,
+    'date': date.toIso8601String(),
+    'amount': amount,
+    'method': method.name,
+    'reference': reference,
+    'note': note,
+  };
 
   factory Payment.fromJson(Map<String, dynamic> json) {
     return Payment(
@@ -163,7 +172,8 @@ class Invoice {
   double total([double? rate]) =>
       (subtotal - discount).clamp(0, double.infinity).toDouble() + tax(rate);
 
-  double get amountPaid => payments.fold(0, (sum, payment) => sum + payment.amount);
+  double get amountPaid =>
+      payments.fold(0, (sum, payment) => sum + payment.amount);
 
   double balance([double? rate]) =>
       (total(rate) - amountPaid).clamp(0, double.infinity).toDouble();
@@ -207,23 +217,23 @@ class Invoice {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'businessId': businessId,
-        'customerId': customerId,
-        'customerName': customerName,
-        'number': number,
-        'issueDate': issueDate.toIso8601String(),
-        'dueDate': dueDate.toIso8601String(),
-        'lines': lines.map((line) => line.toJson()).toList(),
-        'status': status.name,
-        'discount': discount,
-        'vatEnabled': vatEnabled,
-        'vatRate': vatRate,
-        'payments': payments.map((payment) => payment.toJson()).toList(),
-        'notes': notes,
-        'archived': archived,
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'businessId': businessId,
+    'customerId': customerId,
+    'customerName': customerName,
+    'number': number,
+    'issueDate': issueDate.toIso8601String(),
+    'dueDate': dueDate.toIso8601String(),
+    'lines': lines.map((line) => line.toJson()).toList(),
+    'status': status.name,
+    'discount': discount,
+    'vatEnabled': vatEnabled,
+    'vatRate': vatRate,
+    'payments': payments.map((payment) => payment.toJson()).toList(),
+    'notes': notes,
+    'archived': archived,
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory Invoice.fromJson(Map<String, dynamic> json) {
     final rawLines = json['lines'];
@@ -235,13 +245,20 @@ class Invoice {
       customerId: json['customerId']?.toString() ?? '',
       customerName: json['customerName']?.toString() ?? 'Customer',
       number: json['number']?.toString() ?? '',
-      issueDate: DateTime.tryParse(json['issueDate']?.toString() ?? '') ?? DateTime.now(),
-      dueDate: DateTime.tryParse(json['dueDate']?.toString() ?? '') ?? DateTime.now(),
+      issueDate:
+          DateTime.tryParse(json['issueDate']?.toString() ?? '') ??
+          DateTime.now(),
+      dueDate:
+          DateTime.tryParse(json['dueDate']?.toString() ?? '') ??
+          DateTime.now(),
       lines: rawLines is List
           ? rawLines
-              .whereType<Map>()
-              .map((item) => InvoiceLine.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) =>
+                      InvoiceLine.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : const [],
       status: _invoiceStatusFromJson(json['status']),
       discount: (json['discount'] as num?)?.toDouble() ?? 0,
@@ -249,13 +266,16 @@ class Invoice {
       vatRate: (json['vatRate'] as num?)?.toDouble() ?? 16,
       payments: rawPayments is List
           ? rawPayments
-              .whereType<Map>()
-              .map((item) => Payment.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) => Payment.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : const [],
       notes: json['notes']?.toString() ?? '',
       archived: json['archived'] as bool? ?? false,
-      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
           DateTime(2000, 1, 1),
     );
   }

@@ -18,8 +18,9 @@ class CustomerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final invoices = (ref.watch(invoicesProvider).valueOrNull ?? <Invoice>[])
-        .where((invoice) =>
-            invoice.customerId == customer.id && !invoice.archived)
+        .where(
+          (invoice) => invoice.customerId == customer.id && !invoice.archived,
+        )
         .toList();
 
     final invoiced = invoices.fold<double>(
@@ -62,23 +63,21 @@ class CustomerProfileScreen extends ConsumerWidget {
                     children: [
                       Text(
                         customer.name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w900),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       if (customer.phone.isNotEmpty) Text(customer.phone),
                       if (customer.email.isNotEmpty)
                         Text(
                           customer.email,
                           style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
-                      if (customer.address.isNotEmpty)
-                        Text(customer.address),
+                      if (customer.address.isNotEmpty) Text(customer.address),
                       if (customer.taxId.isNotEmpty)
                         Text('Tax ID: ${customer.taxId}'),
                     ],
@@ -116,10 +115,9 @@ class CustomerProfileScreen extends ConsumerWidget {
           const SizedBox(height: 22),
           Text(
             'Invoice history',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           if (invoices.isEmpty)

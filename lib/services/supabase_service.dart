@@ -16,9 +16,8 @@ class SupabaseService {
     initialized = true;
   }
 
-  static SupabaseClient? get tryClient => initialized
-      ? Supabase.instance.client
-      : null;
+  static SupabaseClient? get tryClient =>
+      initialized ? Supabase.instance.client : null;
 
   static SupabaseClient get client {
     if (!initialized) {

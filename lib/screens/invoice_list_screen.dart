@@ -61,17 +61,15 @@ class _InvoiceListState extends ConsumerState<InvoiceListScreen> {
                   Expanded(
                     child: Text(
                       'Invoices',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
+                      style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
                   Text(
                     '${active.length}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -124,10 +122,12 @@ class _InvoiceListState extends ConsumerState<InvoiceListScreen> {
                   message: normalized.isNotEmpty || filter != null
                       ? 'Try another search or clear the filter.'
                       : 'Create your first invoice and it will appear here.',
-                  actionLabel:
-                      normalized.isEmpty && filter == null ? 'Create invoice' : null,
-                  onAction:
-                      normalized.isEmpty && filter == null ? widget.onCreate : null,
+                  actionLabel: normalized.isEmpty && filter == null
+                      ? 'Create invoice'
+                      : null,
+                  onAction: normalized.isEmpty && filter == null
+                      ? widget.onCreate
+                      : null,
                 )
               else
                 ...list.map(
@@ -145,10 +145,7 @@ class _InvoiceListState extends ConsumerState<InvoiceListScreen> {
                         children: [
                           CircleAvatar(
                             backgroundColor: _statusColor(
-                              effectiveInvoiceStatus(
-                                invoice,
-                                invoice.vatRate,
-                              ),
+                              effectiveInvoiceStatus(invoice, invoice.vatRate),
                             ).withValues(alpha: .12),
                             child: Icon(
                               _statusIcon(
@@ -254,12 +251,12 @@ class _InvoiceListState extends ConsumerState<InvoiceListScreen> {
   }
 
   IconData _statusIcon(InvoiceStatus status) => switch (status) {
-        InvoiceStatus.paid => Icons.check_circle_outline,
-        InvoiceStatus.overdue => Icons.warning_amber_rounded,
-        InvoiceStatus.cancelled => Icons.block_outlined,
-        InvoiceStatus.draft => Icons.edit_note,
-        InvoiceStatus.partiallyPaid => Icons.timelapse,
-        InvoiceStatus.viewed => Icons.visibility_outlined,
-        InvoiceStatus.sent => Icons.send_outlined,
-      };
+    InvoiceStatus.paid => Icons.check_circle_outline,
+    InvoiceStatus.overdue => Icons.warning_amber_rounded,
+    InvoiceStatus.cancelled => Icons.block_outlined,
+    InvoiceStatus.draft => Icons.edit_note,
+    InvoiceStatus.partiallyPaid => Icons.timelapse,
+    InvoiceStatus.viewed => Icons.visibility_outlined,
+    InvoiceStatus.sent => Icons.send_outlined,
+  };
 }

@@ -37,7 +37,8 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final business = ref.read(businessProvider).valueOrNull ??
+    final business =
+        ref.read(businessProvider).valueOrNull ??
         BusinessProfile(
           id: 'default',
           name: 'My Business',
@@ -86,9 +87,10 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
     super.dispose();
   }
 
-
   String get _logoStatus {
-    if (logoPath.isEmpty) return 'No logo selected. PDF will use text branding.';
+    if (logoPath.isEmpty) {
+      return 'No logo selected. PDF will use text branding.';
+    }
     return 'Logo selected: ${logoPath.split(RegExp(r'[\\/]')).last}';
   }
 
@@ -120,10 +122,9 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
         children: [
           Text(
             'Business identity',
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
           Text(
@@ -161,7 +162,9 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: pin,
-                  decoration: const InputDecoration(labelText: 'KRA PIN (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'KRA PIN (optional)',
+                  ),
                 ),
               ],
             ),
@@ -173,10 +176,9 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
               children: [
                 Text(
                   'Branding & currency',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -219,10 +221,9 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
               children: [
                 Text(
                   'Invoice defaults',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -230,16 +231,18 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
                     Expanded(
                       child: TextField(
                         controller: prefix,
-                        decoration:
-                            const InputDecoration(labelText: 'Invoice prefix'),
+                        decoration: const InputDecoration(
+                          labelText: 'Invoice prefix',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         value: due,
-                        decoration:
-                            const InputDecoration(labelText: 'Default due'),
+                        decoration: const InputDecoration(
+                          labelText: 'Default due',
+                        ),
                         items: dueOptions
                             .map(
                               (days) => DropdownMenuItem<int>(
@@ -283,10 +286,9 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
               children: [
                 Text(
                   'Payment details',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -326,17 +328,17 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
               children: [
                 Text(
                   'Invoice footer',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: thanks,
                   maxLines: 2,
-                  decoration:
-                      const InputDecoration(labelText: 'Thank-you message'),
+                  decoration: const InputDecoration(
+                    labelText: 'Thank-you message',
+                  ),
                 ),
               ],
             ),
@@ -353,14 +355,17 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
   }
 
   Future<void> _save() async {
-    final old = ref.read(businessProvider).valueOrNull ??
+    final old =
+        ref.read(businessProvider).valueOrNull ??
         BusinessProfile(
           id: 'default',
           name: 'My Business',
           businessType: 'Other',
         );
 
-    await ref.read(businessProvider.notifier).save(
+    await ref
+        .read(businessProvider.notifier)
+        .save(
           old.copyWith(
             name: name.text.trim().isEmpty ? 'My Business' : name.text.trim(),
             phone: phone.text.trim(),
@@ -369,7 +374,7 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
             kraPin: pin.text.trim(),
             currency: currency.text.trim().isEmpty
                 ? 'KES'
-                : currency.text.trim().toUpperCase(), 
+                : currency.text.trim().toUpperCase(),
             invoicePrefix: prefix.text.trim().isEmpty
                 ? 'INV'
                 : prefix.text.trim().toUpperCase(),
@@ -388,9 +393,9 @@ class _SettingsState extends ConsumerState<BusinessSettingsScreen> {
         );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Business settings saved')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Business settings saved')));
     Navigator.pop(context);
   }
 }

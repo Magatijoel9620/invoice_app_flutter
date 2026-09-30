@@ -68,7 +68,8 @@ class LocalStore {
     final targetBusiness = '$_scopeKey/$targetScope/$_businessKey';
     final hasTargetData = prefs.containsKey(targetBusiness);
     final anonymousBusiness = '$_scopeKey/$_anonymousScope/$_businessKey';
-    final shouldMigrate = !hasTargetData && prefs.containsKey(anonymousBusiness);
+    final shouldMigrate =
+        !hasTargetData && prefs.containsKey(anonymousBusiness);
 
     if (shouldMigrate && _scope == _anonymousScope) {
       for (final key in const [

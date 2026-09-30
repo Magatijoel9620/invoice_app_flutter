@@ -98,14 +98,20 @@ class SyncService {
   Future<void> sync() async {
     if (_running) return;
     if (!connectivity.isOnline) {
-      status.setState(SyncState.offline, message: 'Offline — changes stay on this device.');
+      status.setState(
+        SyncState.offline,
+        message: 'Offline — changes stay on this device.',
+      );
       await status.refreshFromQueue(queue);
       return;
     }
 
     if (!SupabaseService.initialized ||
         SupabaseService.tryClient?.auth.currentUser == null) {
-      status.setState(SyncState.idle, message: 'Sign in to sync your cloud data.');
+      status.setState(
+        SyncState.idle,
+        message: 'Sign in to sync your cloud data.',
+      );
       await status.refreshFromQueue(queue);
       return;
     }
@@ -168,12 +174,21 @@ class SyncService {
     // still pull/read their records, but pending local writes stay queued until
     // the account becomes active again. This prevents bootstrap from failing
     // repeatedly just because an expired account has offline changes.
-    final subscriptionStatus = await client.rpc('refresh_subscription_status');
-    final canWrite = subscriptionStatus == 'trialing' || subscriptionStatus == 'active';
-    if (canWrite) {
-      await _pushPending(business);
+    final billingResponse = await client.functions.invoke(
+      'invoiceeasy-billing-bridge',
+      body: const {'operation': 'snapshot'},
+    );
+    final billingData = billingResponse.data;
+    if (billingData is Map && billingData['error'] == null) {
+      final subscription = billingData['subscription'];
+      final status = subscription is Map
+          ? subscription['status']?.toString()
+          : null;
+      final canWrite = status == 'trial' || status == 'active';
+      if (canWrite) {
+        await _pushPending(business);
+      }
     }
-
     // Pull once more after pushing. PostgreSQL triggers may update server
     // timestamps, and this final pull makes every device converge on the
     // server representation after a successful write.
@@ -442,10 +457,12 @@ class SyncService {
                 .eq('owner_id', user.id);
           } else {
             final model = BusinessProfile.fromJson(change.payload!);
-            await client.from('businesses').upsert(
-              CloudMapper.business(model, user.id),
-              onConflict: 'owner_id',
-            );
+            await client
+                .from('businesses')
+                .upsert(
+                  CloudMapper.business(model, user.id),
+                  onConflict: 'owner_id',
+                );
           }
         } else {
           final table = '${change.entity}s';
@@ -473,8 +490,10 @@ class SyncService {
       } catch (error) {
         final permanent = _isPermanent(error);
         final message = _friendlyError(error);
-          final attempts = change.attempts + 1;
-        final exponent = attempts <= 1 ? 0 : (attempts - 1 > 5 ? 5 : attempts - 1);
+        final attempts = change.attempts + 1;
+        final exponent = attempts <= 1
+            ? 0
+            : (attempts - 1 > 5 ? 5 : attempts - 1);
         final delay = Duration(seconds: attempts >= 5 ? 60 : 1 << exponent);
         await queue.recordFailure(
           change,
@@ -567,7 +586,9 @@ class SyncService {
           error.message.toLowerCase().contains('row-level security')) {
         return false;
       }
-      return error.code == '22P02' || error.code == '23502' || error.code == '23503';
+      return error.code == '22P02' ||
+          error.code == '23502' ||
+          error.code == '23503';
     }
     return false;
   }
@@ -579,7 +600,8 @@ class SyncService {
     if (error is AuthException) return error.message;
     if (error is PostgrestException) {
       final message = error.message.toLowerCase();
-      if (message.contains('row-level security') || message.contains('permission denied')) {
+      if (message.contains('row-level security') ||
+          message.contains('permission denied')) {
         return 'Cloud writes are currently restricted. Check your InvoiceEasy subscription and try again.';
       }
       return error.message;

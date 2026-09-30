@@ -37,89 +37,87 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(titles[index]),
-       actions: [
-  IconButton(
-    tooltip: isDark ? 'Use light mode' : 'Use dark mode',
-    onPressed: () => widget.onThemeModeChanged(
-      isDark ? ThemeMode.light : ThemeMode.dark,
-    ),
-    icon: Icon(
-      isDark
-          ? Icons.light_mode_outlined
-          : Icons.dark_mode_outlined,
-    ),
-  ),
+        actions: [
+          IconButton(
+            tooltip: isDark ? 'Use light mode' : 'Use dark mode',
+            onPressed: () => widget.onThemeModeChanged(
+              isDark ? ThemeMode.light : ThemeMode.dark,
+            ),
+            icon: Icon(
+              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            ),
+          ),
 
-  IconButton(
-    tooltip: 'Subscription',
-    onPressed: () => _open(const SubscriptionScreen()),
-    icon: const Icon(Icons.workspace_premium_outlined),
-  ),
+          IconButton(
+            tooltip: 'Subscription',
+            onPressed: () => _open(const SubscriptionScreen()),
+            icon: const Icon(Icons.workspace_premium_outlined),
+          ),
 
-  if (index == 0)
-    IconButton(
-      tooltip: 'Reports',
-      onPressed: () => _open(const ReportsScreen()),
-      icon: const Icon(Icons.insights_outlined),
-    ),
+          if (index == 0)
+            IconButton(
+              tooltip: 'Reports',
+              onPressed: () => _open(const ReportsScreen()),
+              icon: const Icon(Icons.insights_outlined),
+            ),
 
-  PopupMenuButton<String>(
-    onSelected: (v) {
-      if (v == 'reports') {
-        _open(const ReportsScreen());
-      }
-      if (v == 'archive') {
-        _open(const ArchivedInvoicesScreen());
-      }
-      if (v == 'settings') {
-        _open(const BusinessSettingsScreen());
-      }
-      if (v == 'account') {
-        _open(const AccountScreen());
-      }
-      if (v == 'subscription') {
-        _open(const SubscriptionScreen());
-      }
-    },
-    itemBuilder: (_) => const [
-      PopupMenuItem(
-        value: 'reports',
-        child: ListTile(
-          leading: Icon(Icons.insights_outlined),
-          title: Text('Reports'),
-        ),
-      ),
-      PopupMenuItem(
-        value: 'archive',
-        child: ListTile(
-          leading: Icon(Icons.archive_outlined),
-          title: Text('Archived invoices'),
-        ),
-      ),
-      PopupMenuItem(
-        value: 'settings',
-        child: ListTile(
-          leading: Icon(Icons.settings_outlined),
-          title: Text('Business settings'),
-        ),
-      ),
-      PopupMenuItem(
-        value: 'subscription',
-        child: ListTile(
-          leading: Icon(Icons.workspace_premium_outlined),
-          title: Text('Subscription'),
-        ),
-      ),
-      PopupMenuItem(
-        value: 'account',
-        child: ListTile(
-          leading: Icon(Icons.person_outline),
-          title: Text('Account'),
-        ),
-      ),
-    ],
-  ),
-],
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'reports') {
+                _open(const ReportsScreen());
+              }
+              if (v == 'archive') {
+                _open(const ArchivedInvoicesScreen());
+              }
+              if (v == 'settings') {
+                _open(const BusinessSettingsScreen());
+              }
+              if (v == 'account') {
+                _open(const AccountScreen());
+              }
+              if (v == 'subscription') {
+                _open(const SubscriptionScreen());
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'reports',
+                child: ListTile(
+                  leading: Icon(Icons.insights_outlined),
+                  title: Text('Reports'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'archive',
+                child: ListTile(
+                  leading: Icon(Icons.archive_outlined),
+                  title: Text('Archived invoices'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'settings',
+                child: ListTile(
+                  leading: Icon(Icons.settings_outlined),
+                  title: Text('Business settings'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'subscription',
+                child: ListTile(
+                  leading: Icon(Icons.workspace_premium_outlined),
+                  title: Text('Subscription'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'account',
+                child: ListTile(
+                  leading: Icon(Icons.person_outline),
+                  title: Text('Account'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [

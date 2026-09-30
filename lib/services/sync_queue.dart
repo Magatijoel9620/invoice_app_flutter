@@ -27,7 +27,8 @@ class PendingChange {
   });
 
   bool get isWaitingForRetry =>
-      nextAttemptAt != null && DateTime.now().toUtc().isBefore(nextAttemptAt!.toUtc());
+      nextAttemptAt != null &&
+      DateTime.now().toUtc().isBefore(nextAttemptAt!.toUtc());
 
   PendingChange copyWith({
     int? attempts,
@@ -45,36 +46,40 @@ class PendingChange {
       payload: payload,
       attempts: attempts ?? this.attempts,
       lastError: clearLastError ? null : (lastError ?? this.lastError),
-      nextAttemptAt: clearNextAttemptAt ? null : (nextAttemptAt ?? this.nextAttemptAt),
+      nextAttemptAt: clearNextAttemptAt
+          ? null
+          : (nextAttemptAt ?? this.nextAttemptAt),
       permanentFailure: permanentFailure ?? this.permanentFailure,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'entity': entity,
-        'id': id,
-        'operation': operation,
-        'updatedAt': updatedAt.toIso8601String(),
-        'payload': payload,
-        'attempts': attempts,
-        'lastError': lastError,
-        'nextAttemptAt': nextAttemptAt?.toIso8601String(),
-        'permanentFailure': permanentFailure,
-      };
+    'entity': entity,
+    'id': id,
+    'operation': operation,
+    'updatedAt': updatedAt.toIso8601String(),
+    'payload': payload,
+    'attempts': attempts,
+    'lastError': lastError,
+    'nextAttemptAt': nextAttemptAt?.toIso8601String(),
+    'permanentFailure': permanentFailure,
+  };
 
   factory PendingChange.fromJson(Map<String, dynamic> j) => PendingChange(
-        entity: j['entity'] as String? ?? '',
-        id: j['id'] as String? ?? '',
-        operation: j['operation'] as String? ?? 'upsert',
-        updatedAt: DateTime.tryParse(j['updatedAt'] as String? ?? '') ?? DateTime.now().toUtc(),
-        payload: j['payload'] == null
-            ? null
-            : Map<String, dynamic>.from(j['payload'] as Map),
-        attempts: (j['attempts'] as num?)?.toInt() ?? 0,
-        lastError: j['lastError'] as String?,
-        nextAttemptAt: DateTime.tryParse(j['nextAttemptAt'] as String? ?? ''),
-        permanentFailure: j['permanentFailure'] as bool? ?? false,
-      );
+    entity: j['entity'] as String? ?? '',
+    id: j['id'] as String? ?? '',
+    operation: j['operation'] as String? ?? 'upsert',
+    updatedAt:
+        DateTime.tryParse(j['updatedAt'] as String? ?? '') ??
+        DateTime.now().toUtc(),
+    payload: j['payload'] == null
+        ? null
+        : Map<String, dynamic>.from(j['payload'] as Map),
+    attempts: (j['attempts'] as num?)?.toInt() ?? 0,
+    lastError: j['lastError'] as String?,
+    nextAttemptAt: DateTime.tryParse(j['nextAttemptAt'] as String? ?? ''),
+    permanentFailure: j['permanentFailure'] as bool? ?? false,
+  );
 }
 
 class SyncQueue extends ChangeNotifier {
@@ -86,7 +91,9 @@ class SyncQueue extends ChangeNotifier {
     if (raw == null || raw.isEmpty) return [];
     try {
       return (jsonDecode(raw) as List)
-          .map((e) => PendingChange.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) => PendingChange.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
           .toList();
     } catch (_) {
       return [];
@@ -97,7 +104,9 @@ class SyncQueue extends ChangeNotifier {
 
   Future<void> enqueue(PendingChange change) async {
     final items = await all();
-    final index = items.indexWhere((e) => e.entity == change.entity && e.id == change.id);
+    final index = items.indexWhere(
+      (e) => e.entity == change.entity && e.id == change.id,
+    );
     if (index >= 0) {
       // A newer local mutation replaces an older retry state. This prevents a
       // previous failure from incorrectly blocking a fresh user edit.
@@ -151,7 +160,11 @@ class SyncQueue extends ChangeNotifier {
     final items = await all();
     var changed = false;
     for (var i = 0; i < items.length; i++) {
-      if (items[i].attempts == 0 && items[i].lastError == null && !items[i].permanentFailure) continue;
+      if (items[i].attempts == 0 &&
+          items[i].lastError == null &&
+          !items[i].permanentFailure) {
+        continue;
+      }
       items[i] = items[i].copyWith(
         attempts: 0,
         clearLastError: true,
@@ -189,6 +202,9 @@ class SyncQueue extends ChangeNotifier {
 
   Future<void> _save(List<PendingChange> items) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(items.map((e) => e.toJson()).toList()));
+    await prefs.setString(
+      key,
+      jsonEncode(items.map((e) => e.toJson()).toList()),
+    );
   }
 }

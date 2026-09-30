@@ -55,19 +55,15 @@ class _CustomersState extends ConsumerState<CustomersScreen> {
                     Expanded(
                       child: Text(
                         'Customers',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
+                        style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     Text(
                       '${items.length}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -138,9 +134,9 @@ class _CustomersState extends ConsumerState<CustomersScreen> {
                                   if (customer.email.isNotEmpty)
                                     Text(
                                       customer.email,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                 ],
                               ),
@@ -191,7 +187,9 @@ class _CustomersState extends ConsumerState<CustomersScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Delete customer?'),
-        content: Text('Delete ${customer.name}? Existing invoices will remain stored.'),
+        content: Text(
+          'Delete ${customer.name}? Existing invoices will remain stored.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -279,8 +277,9 @@ class _CustomerFormDialogState extends State<CustomerFormDialog> {
             const SizedBox(height: 9),
             TextField(
               controller: taxId,
-              decoration:
-                  const InputDecoration(labelText: 'Tax ID / KRA PIN (optional)'),
+              decoration: const InputDecoration(
+                labelText: 'Tax ID / KRA PIN (optional)',
+              ),
             ),
           ],
         ),

@@ -62,7 +62,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
     try {
       await AuthService().resetPassword(_email.text);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -70,6 +70,7 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
         );
+      }
     } on AuthException catch (e) {
       if (mounted) setState(() => error = e.message);
     }

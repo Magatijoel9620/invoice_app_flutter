@@ -25,7 +25,9 @@ class SubscriptionAccess {
       );
     }
     final end = subscription.accessEndsAt;
-    final writable = subscription.hasAccess && (end == null || end.isAfter(DateTime.now().toUtc()));
+    final writable =
+        subscription.hasAccess &&
+        (end == null || end.isAfter(DateTime.now().toUtc()));
     return SubscriptionAccess(
       status: subscription.status,
       canRead: true,

@@ -9,8 +9,16 @@ class SubscriptionActionGuard {
   static bool requireWrite(BuildContext context, WidgetRef ref) {
     final access = ref.read(subscriptionAccessProvider);
     if (access.canWrite) return true;
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your trial or subscription has ended. Choose a plan to continue.')));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Your trial or subscription has ended. Choose a plan to continue.',
+        ),
+      ),
+    );
     return false;
   }
 }

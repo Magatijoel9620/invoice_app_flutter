@@ -63,26 +63,29 @@ void main() {
     expect(current.permanentFailure, isFalse);
   });
 
-  test('permanent failures remain visible instead of being discarded', () async {
-    final queue = SyncQueue();
-    final change = PendingChange(
-      entity: 'product',
-      id: 'p1',
-      operation: 'upsert',
-      updatedAt: DateTime.now().toUtc(),
-      payload: {'id': 'p1'},
-    );
+  test(
+    'permanent failures remain visible instead of being discarded',
+    () async {
+      final queue = SyncQueue();
+      final change = PendingChange(
+        entity: 'product',
+        id: 'p1',
+        operation: 'upsert',
+        updatedAt: DateTime.now().toUtc(),
+        payload: {'id': 'p1'},
+      );
 
-    await queue.enqueue(change);
-    await queue.recordFailure(
-      change,
-      error: 'Invalid server payload',
-      retryAfter: Duration.zero,
-      permanent: true,
-    );
+      await queue.enqueue(change);
+      await queue.recordFailure(
+        change,
+        error: 'Invalid server payload',
+        retryAfter: Duration.zero,
+        permanent: true,
+      );
 
-    final current = (await queue.all()).single;
-    expect(current.permanentFailure, isTrue);
-    expect(current.lastError, 'Invalid server payload');
-  });
+      final current = (await queue.all()).single;
+      expect(current.permanentFailure, isTrue);
+      expect(current.lastError, 'Invalid server payload');
+    },
+  );
 }

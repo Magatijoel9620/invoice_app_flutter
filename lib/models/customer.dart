@@ -38,14 +38,14 @@ class Customer {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'phone': phone,
-        'email': email,
-        'address': address,
-        'taxId': taxId,
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'phone': phone,
+    'email': email,
+    'address': address,
+    'taxId': taxId,
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
@@ -55,7 +55,8 @@ class Customer {
       email: json['email']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
       taxId: json['taxId']?.toString() ?? '',
-      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
           DateTime(2000, 1, 1),
     );
   }

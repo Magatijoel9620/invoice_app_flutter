@@ -56,7 +56,12 @@ class ArchivedInvoicesScreen extends ConsumerWidget {
                   trailing: PopupMenuButton<String>(
                     onSelected: (v) async {
                       if (v == 'restore') {
-                        if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
+                        if (!SubscriptionActionGuard.requireWrite(
+                          context,
+                          ref,
+                        )) {
+                          return;
+                        }
                         await ref
                             .read(invoicesProvider.notifier)
                             .upsert(invoice.copyWith(archived: false));
@@ -82,7 +87,12 @@ class ArchivedInvoicesScreen extends ConsumerWidget {
                         );
                         if (!context.mounted) return;
                         if (ok == true) {
-                          if (!SubscriptionActionGuard.requireWrite(context, ref)) return;
+                          if (!SubscriptionActionGuard.requireWrite(
+                            context,
+                            ref,
+                          )) {
+                            return;
+                          }
                           await ref
                               .read(invoicesProvider.notifier)
                               .delete(invoice.id);

@@ -1,2 +1,3 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-final appShellIndexProvider=StateProvider<int>((_)=>0);
+
+final appShellIndexProvider = StateProvider<int>((_) => 0);

@@ -84,7 +84,10 @@ class InvoicePdfService {
             pw.SizedBox(height: 18),
             _sectionTitle('NOTES'),
             pw.SizedBox(height: 5),
-            pw.Text(invoice.notes, style: pw.TextStyle(color: _ink, fontSize: 9)),
+            pw.Text(
+              invoice.notes,
+              style: pw.TextStyle(color: _ink, fontSize: 9),
+            ),
           ],
           pw.SizedBox(height: 26),
           pw.Center(
@@ -194,14 +197,20 @@ class InvoicePdfService {
               ),
             ),
             pw.SizedBox(height: 14),
-            _receiptRow('Invoice total', _money(invoice.total(invoice.vatRate))),
+            _receiptRow(
+              'Invoice total',
+              _money(invoice.total(invoice.vatRate)),
+            ),
             _receiptRow('Total paid', _money(invoice.amountPaid)),
             _receiptRow('Balance remaining', _money(remaining)),
             if (payment.note.isNotEmpty) ...[
               pw.SizedBox(height: 16),
               _sectionTitle('NOTE'),
               pw.SizedBox(height: 5),
-              pw.Text(payment.note, style: pw.TextStyle(fontSize: 9, color: _ink)),
+              pw.Text(
+                payment.note,
+                style: pw.TextStyle(fontSize: 9, color: _ink),
+              ),
             ],
             pw.Spacer(),
             pw.Divider(color: _line),
@@ -272,8 +281,14 @@ class InvoicePdfService {
               pw.SizedBox(height: 7),
               _statusPill(status),
               pw.SizedBox(height: 7),
-              pw.Text('Issued ${_date(invoice.issueDate)}', style: pw.TextStyle(fontSize: 8, color: _muted)),
-              pw.Text('Due ${_date(invoice.dueDate)}', style: pw.TextStyle(fontSize: 8, color: _muted)),
+              pw.Text(
+                'Issued ${_date(invoice.issueDate)}',
+                style: pw.TextStyle(fontSize: 8, color: _muted),
+              ),
+              pw.Text(
+                'Due ${_date(invoice.dueDate)}',
+                style: pw.TextStyle(fontSize: 8, color: _muted),
+              ),
             ],
           ),
         ],
@@ -281,10 +296,7 @@ class InvoicePdfService {
     );
   }
 
-  static pw.Widget _businessHeader(
-    BusinessProfile b,
-    pw.MemoryImage? logo,
-  ) {
+  static pw.Widget _businessHeader(BusinessProfile b, pw.MemoryImage? logo) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -304,7 +316,10 @@ class InvoicePdfService {
           ),
         ),
         if (b.businessType.isNotEmpty)
-          pw.Text(b.businessType, style: pw.TextStyle(color: _muted, fontSize: 8)),
+          pw.Text(
+            b.businessType,
+            style: pw.TextStyle(color: _muted, fontSize: 8),
+          ),
         if (b.address.isNotEmpty)
           pw.Text(b.address, style: pw.TextStyle(color: _muted, fontSize: 8)),
         if (b.phone.isNotEmpty)
@@ -312,7 +327,10 @@ class InvoicePdfService {
         if (b.email.isNotEmpty)
           pw.Text(b.email, style: pw.TextStyle(color: _muted, fontSize: 8)),
         if (b.kraPin.isNotEmpty)
-          pw.Text('KRA PIN: ${b.kraPin}', style: pw.TextStyle(color: _muted, fontSize: 8)),
+          pw.Text(
+            'KRA PIN: ${b.kraPin}',
+            style: pw.TextStyle(color: _muted, fontSize: 8),
+          ),
       ],
     );
   }
@@ -344,15 +362,28 @@ class InvoicePdfService {
                   ),
                 ),
                 if (i.customerId.isNotEmpty)
-                  pw.Text('Customer ID: ${i.customerId}', style: pw.TextStyle(color: _muted, fontSize: 8)),
+                  pw.Text(
+                    'Customer ID: ${i.customerId}',
+                    style: pw.TextStyle(color: _muted, fontSize: 8),
+                  ),
               ],
             ),
           ),
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
-              pw.Text('Currency', style: pw.TextStyle(color: _muted, fontSize: 7)),
-              pw.Text(b.currency, style: pw.TextStyle(color: _ink, fontWeight: pw.FontWeight.bold, fontSize: 9)),
+              pw.Text(
+                'Currency',
+                style: pw.TextStyle(color: _muted, fontSize: 7),
+              ),
+              pw.Text(
+                b.currency,
+                style: pw.TextStyle(
+                  color: _ink,
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 9,
+                ),
+              ),
             ],
           ),
         ],
@@ -364,12 +395,14 @@ class InvoicePdfService {
     return pw.TableHelper.fromTextArray(
       headers: const ['Description', 'Qty', 'Unit price', 'Amount'],
       data: i.lines
-          .map((l) => [
-                l.description,
-                _qty(l.quantity),
-                _money(l.unitPrice),
-                _money(l.total),
-              ])
+          .map(
+            (l) => [
+              l.description,
+              _qty(l.quantity),
+              _money(l.unitPrice),
+              _money(l.total),
+            ],
+          )
           .toList(),
       headerStyle: pw.TextStyle(
         fontWeight: pw.FontWeight.bold,
@@ -392,7 +425,12 @@ class InvoicePdfService {
     );
   }
 
-  static pw.Widget _totals(Invoice i, double total, double paid, double balance) {
+  static pw.Widget _totals(
+    Invoice i,
+    double total,
+    double paid,
+    double balance,
+  ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -404,7 +442,10 @@ class InvoicePdfService {
           _totalRow('Subtotal', _money(i.subtotal)),
           if (i.discount > 0) _totalRow('Discount', '− ${_money(i.discount)}'),
           if (i.vatEnabled)
-            _totalRow('VAT (${i.vatRate.toStringAsFixed(0)}%)', _money(i.tax(i.vatRate))),
+            _totalRow(
+              'VAT (${i.vatRate.toStringAsFixed(0)}%)',
+              _money(i.tax(i.vatRate)),
+            ),
           pw.Divider(color: _line),
           _totalRow('TOTAL', _money(total), bold: true, accent: true),
           _totalRow('Paid', _money(paid)),
@@ -415,109 +456,129 @@ class InvoicePdfService {
   }
 
   static pw.Widget _payments(Invoice i) => pw.TableHelper.fromTextArray(
-        headers: const ['Date', 'Method', 'Reference', 'Amount'],
-        data: i.payments
-            .map((p) => [
-                  _date(p.date),
-                  _method(p.method),
-                  p.reference.isEmpty ? '—' : p.reference,
-                  _money(p.amount),
-                ])
-            .toList(),
-        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
-        headerDecoration: pw.BoxDecoration(color: _soft),
-        cellStyle: pw.TextStyle(fontSize: 8, color: _ink),
-        cellPadding: const pw.EdgeInsets.all(5),
-      );
+    headers: const ['Date', 'Method', 'Reference', 'Amount'],
+    data: i.payments
+        .map(
+          (p) => [
+            _date(p.date),
+            _method(p.method),
+            p.reference.isEmpty ? '—' : p.reference,
+            _money(p.amount),
+          ],
+        )
+        .toList(),
+    headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+    headerDecoration: pw.BoxDecoration(color: _soft),
+    cellStyle: pw.TextStyle(fontSize: 8, color: _ink),
+    cellPadding: const pw.EdgeInsets.all(5),
+  );
 
   static pw.Widget _paymentDetails(BusinessProfile b) => pw.Container(
-        padding: const pw.EdgeInsets.all(12),
-        decoration: pw.BoxDecoration(
-          border: pw.Border.all(color: _line),
-          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(9)),
-        ),
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            _sectionTitle('PAYMENT DETAILS'),
-            pw.SizedBox(height: 6),
-            if (b.mpesaTill.isNotEmpty) pw.Text('M-Pesa Till: ${b.mpesaTill}', style: pw.TextStyle(fontSize: 8, color: _ink)),
-            if (b.paybill.isNotEmpty) pw.Text('Paybill: ${b.paybill}', style: pw.TextStyle(fontSize: 8, color: _ink)),
-            if (b.bankName.isNotEmpty)
-              pw.Text('Bank: ${b.bankName}${b.bankAccount.isNotEmpty ? ' • ${b.bankAccount}' : ''}', style: pw.TextStyle(fontSize: 8, color: _ink)),
-          ],
-        ),
-      );
+    padding: const pw.EdgeInsets.all(12),
+    decoration: pw.BoxDecoration(
+      border: pw.Border.all(color: _line),
+      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(9)),
+    ),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('PAYMENT DETAILS'),
+        pw.SizedBox(height: 6),
+        if (b.mpesaTill.isNotEmpty)
+          pw.Text(
+            'M-Pesa Till: ${b.mpesaTill}',
+            style: pw.TextStyle(fontSize: 8, color: _ink),
+          ),
+        if (b.paybill.isNotEmpty)
+          pw.Text(
+            'Paybill: ${b.paybill}',
+            style: pw.TextStyle(fontSize: 8, color: _ink),
+          ),
+        if (b.bankName.isNotEmpty)
+          pw.Text(
+            'Bank: ${b.bankName}${b.bankAccount.isNotEmpty ? ' • ${b.bankAccount}' : ''}',
+            style: pw.TextStyle(fontSize: 8, color: _ink),
+          ),
+      ],
+    ),
+  );
 
   static pw.Widget _sectionTitle(String text) => pw.Text(
-        text,
-        style: pw.TextStyle(
-          color: _accent,
-          fontSize: 8,
-          fontWeight: pw.FontWeight.bold,
-        ),
-      );
+    text,
+    style: pw.TextStyle(
+      color: _accent,
+      fontSize: 8,
+      fontWeight: pw.FontWeight.bold,
+    ),
+  );
 
   static pw.Widget _statusPill(String text) => pw.Container(
-        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: pw.BoxDecoration(
-          color: _soft,
-          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(20)),
-        ),
-        child: pw.Text(
-          text.toUpperCase(),
-          style: pw.TextStyle(color: _accent, fontSize: 7, fontWeight: pw.FontWeight.bold),
-        ),
-      );
+    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: pw.BoxDecoration(
+      color: _soft,
+      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(20)),
+    ),
+    child: pw.Text(
+      text.toUpperCase(),
+      style: pw.TextStyle(
+        color: _accent,
+        fontSize: 7,
+        fontWeight: pw.FontWeight.bold,
+      ),
+    ),
+  );
 
   static pw.Widget _totalRow(
     String label,
     String value, {
     bool bold = false,
     bool accent = false,
-  }) =>
-      pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 3),
-        child: pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(
-              label,
-              style: pw.TextStyle(
-                color: accent ? _accent : _muted,
-                fontSize: accent ? 10 : 8,
-                fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
-              ),
-            ),
-            pw.Text(
-              value,
-              style: pw.TextStyle(
-                color: accent ? _accent : _ink,
-                fontSize: accent ? 11 : 8,
-                fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
-              ),
-            ),
-          ],
+  }) => pw.Padding(
+    padding: const pw.EdgeInsets.symmetric(vertical: 3),
+    child: pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(
+          label,
+          style: pw.TextStyle(
+            color: accent ? _accent : _muted,
+            fontSize: accent ? 10 : 8,
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
         ),
-      );
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            color: accent ? _accent : _ink,
+            fontSize: accent ? 11 : 8,
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+      ],
+    ),
+  );
 
   static pw.Widget _receiptRow(String label, String value) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 5),
-        child: pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(label, style: pw.TextStyle(color: _muted, fontSize: 9)),
-            pw.SizedBox(width: 15),
-            pw.Expanded(
-              child: pw.Text(
-                value,
-                textAlign: pw.TextAlign.right,
-                style: pw.TextStyle(color: _ink, fontSize: 9, fontWeight: pw.FontWeight.bold),
-              ),
+    padding: const pw.EdgeInsets.symmetric(vertical: 5),
+    child: pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(label, style: pw.TextStyle(color: _muted, fontSize: 9)),
+        pw.SizedBox(width: 15),
+        pw.Expanded(
+          child: pw.Text(
+            value,
+            textAlign: pw.TextAlign.right,
+            style: pw.TextStyle(
+              color: _ink,
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
             ),
-          ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   static bool _hasPaymentDetails(BusinessProfile b) =>
       b.mpesaTill.isNotEmpty || b.paybill.isNotEmpty || b.bankName.isNotEmpty;
@@ -531,8 +592,9 @@ class InvoicePdfService {
     return i.status.name == 'viewed' ? 'Viewed' : 'Sent';
   }
 
-  static String _method(PaymentMethod method) =>
-      method.name == 'mpesa' ? 'M-Pesa' : method.name[0].toUpperCase() + method.name.substring(1);
+  static String _method(PaymentMethod method) => method.name == 'mpesa'
+      ? 'M-Pesa'
+      : method.name[0].toUpperCase() + method.name.substring(1);
 
   static String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';

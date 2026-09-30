@@ -40,14 +40,14 @@ class ProductItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type.name,
-        'price': price,
-        'unit': unit,
-        'taxable': taxable,
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'type': type.name,
+    'price': price,
+    'unit': unit,
+    'taxable': taxable,
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory ProductItem.fromJson(Map<String, dynamic> json) {
     final typeName = json['type']?.toString();
@@ -63,7 +63,8 @@ class ProductItem {
       price: (json['price'] as num?)?.toDouble() ?? 0,
       unit: json['unit']?.toString() ?? 'item',
       taxable: json['taxable'] as bool? ?? false,
-      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
           DateTime(2000, 1, 1),
     );
   }

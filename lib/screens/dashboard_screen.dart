@@ -384,7 +384,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            _TrendLegend(),
+            const _TrendLegend(),
           ],
         ),
       ),
@@ -1389,7 +1389,7 @@ class _StatusDonutState extends State<_StatusDonut> {
   int? _hitTest(Offset position) {
     const size = 200.0;
 
-    final center = Offset(size / 2, size / 2);
+    final center = const Offset(size / 2, size / 2);
 
     final distance = (position - center).distance;
 
