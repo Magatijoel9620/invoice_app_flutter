@@ -163,36 +163,70 @@ class SyncService {
         .maybeSingle();
 
     final business = await _resolveBusiness(localBusiness, cloudBusinessRow);
+
     if (business == null) {
       // No business has been configured yet. There is nothing else to sync.
       return;
     }
 
+    // IMPORTANT:
+    // _resolveBusiness() may have created a local business and queued it for
+    // upload when this is a brand-new InvoiceEasy account. The billing bridge
+    // requires the cloud businesses row to exist before it can resolve the
+    // billing identity (resource_id = businesses.id).
+    //
+    // Persist the business FIRST, before calling the billing bridge.
+    if (cloudBusinessRow == null) {
+      await _ensureCloudBusiness(business);
+    }
+
     await _mergeChildren(business.id);
 
-    // Subscription access is authoritative on Supabase. Expired accounts can
-    // still pull/read their records, but pending local writes stay queued until
-    // the account becomes active again. This prevents bootstrap from failing
-    // repeatedly just because an expired account has offline changes.
+    // Subscription access is authoritative on Supabase. The billing bridge
+    // may also create/ensure the initial trial for a newly created business.
+    // This MUST happen only after the InvoiceEasy business exists in cloud.
     final billingResponse = await client.functions.invoke(
       'invoiceeasy-billing-bridge',
       body: const {'operation': 'snapshot'},
     );
+
     final billingData = billingResponse.data;
+
     if (billingData is Map && billingData['error'] == null) {
       final subscription = billingData['subscription'];
-      final status = subscription is Map
+      final subscriptionStatus = subscription is Map
           ? subscription['status']?.toString()
           : null;
-      final canWrite = status == 'trial' || status == 'active';
+
+      final canWrite =
+          subscriptionStatus == 'trial' || subscriptionStatus == 'active';
+
       if (canWrite) {
         await _pushPending(business);
       }
     }
+
     // Pull once more after pushing. PostgreSQL triggers may update server
     // timestamps, and this final pull makes every device converge on the
     // server representation after a successful write.
     await _pullBusinessAndChildren(business.id);
+  }
+
+  Future<void> _ensureCloudBusiness(BusinessProfile business) async {
+    if (!connectivity.isOnline) {
+      throw const _ConnectivityLostException();
+    }
+
+    await client
+        .from('businesses')
+        .upsert(
+          CloudMapper.business(business, user.id),
+          onConflict: 'owner_id',
+        );
+
+    // The business has now been persisted successfully. Remove only the
+    // corresponding business bootstrap mutation from the offline queue.
+    await _removePending('business', business.id);
   }
 
   Future<BusinessProfile?> _resolveBusiness(

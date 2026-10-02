@@ -90,7 +90,7 @@ class SubscriptionScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Subscription protection',
+                      'Your subscription is secure',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
@@ -98,7 +98,8 @@ class SubscriptionScreen extends ConsumerWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      'InvoiceEasy cannot activate a subscription from the client. Payment Engine verification and entitlement state remain authoritative.',
+                      'Your subscription status is securely verified before access is activated. '
+                      'Payments and subscription access are managed through our secure billing system.',
                     ),
                   ],
                 ),
