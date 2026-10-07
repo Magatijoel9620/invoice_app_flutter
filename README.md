@@ -21,6 +21,18 @@ The cloud schema stores the app's JSON models in `data` columns instead of dupli
 
 Only the consolidated V3 SQL migration is shipped. Earlier phase migrations defined incompatible schemas and must not be applied to the same fresh V3 database.
 
+## Production release identity
+
+- Product name: `InvoiceEasy`
+- Android application ID: `ke.co.hempongroup.invoiceeasy`
+- iOS/macOS bundle identifier: `ke.co.hempongroup.invoiceeasy`
+- Linux application ID: `ke.co.hempongroup.invoiceeasy`
+- Windows executable/product name: `InvoiceEasy`
+
+Android release builds are intentionally configured to **never fall back to the debug signing key**. Copy `android/key.properties.example` to `android/key.properties`, configure the production keystore, and run `flutter build appbundle --release`. The local signing file and keystore are ignored by Git.
+
+See `docs/RELEASE_CHECKLIST.md` before publishing.
+
 ## Run locally without cloud
 
 ```bash

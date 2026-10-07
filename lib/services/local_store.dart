@@ -65,28 +65,37 @@ class LocalStore {
     if (target.isEmpty) return false;
 
     final targetScope = target;
-    final targetBusiness = '$_scopeKey/$targetScope/$_businessKey';
-    final hasTargetData = prefs.containsKey(targetBusiness);
-    final anonymousBusiness = '$_scopeKey/$_anonymousScope/$_businessKey';
-    final shouldMigrate =
-        !hasTargetData && prefs.containsKey(anonymousBusiness);
+    final anonymousPrefix = '$_scopeKey/$_anonymousScope/';
+    final targetPrefix = '$_scopeKey/$targetScope/';
 
-    if (shouldMigrate && _scope == _anonymousScope) {
-      for (final key in const [
-        _businessKey,
-        _customersKey,
-        _productsKey,
-        _invoicesKey,
-        'ie_sync_queue_v1',
-        'ie_sync_queue_v2',
-      ]) {
-        final from = '$_scopeKey/$_anonymousScope/$key';
-        final to = '$_scopeKey/$targetScope/$key';
-        final value = prefs.get(from);
-        if (value is String) await prefs.setString(to, value);
-        if (value is int) await prefs.setInt(to, value);
-        if (value is double) await prefs.setDouble(to, value);
-        if (value is bool) await prefs.setBool(to, value);
+    // Migrate the complete anonymous namespace, not just a fixed list of
+    // known model keys. This keeps newly introduced local data from being
+    // stranded in the anonymous scope during first sign-in. Only migrate
+    // keys that do not already exist for the target user, then remove the
+    // anonymous copies so the migration is genuinely one-time.
+    final anonymousKeys = prefs
+        .getKeys()
+        .where((key) => key.startsWith(anonymousPrefix))
+        .toList();
+    final shouldMigrate =
+        _scope == _anonymousScope && anonymousKeys.isNotEmpty;
+
+    if (shouldMigrate) {
+      for (final from in anonymousKeys) {
+        final relativeKey = from.substring(anonymousPrefix.length);
+        if (relativeKey.isEmpty) continue;
+
+        final to = '$targetPrefix$relativeKey';
+        if (!prefs.containsKey(to)) {
+          final value = prefs.get(from);
+          if (value is String) await prefs.setString(to, value);
+          if (value is int) await prefs.setInt(to, value);
+          if (value is double) await prefs.setDouble(to, value);
+          if (value is bool) await prefs.setBool(to, value);
+          if (value is List<String>) await prefs.setStringList(to, value);
+        }
+
+        await prefs.remove(from);
       }
     }
 
