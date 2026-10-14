@@ -47,7 +47,8 @@ class SubscriptionScreen extends ConsumerWidget {
                 child: Center(child: CircularProgressIndicator()),
               ),
               error: (error, _) => _ErrorCard(
-                message: error.toString(),
+                message:
+                    'Unable to load plans. Check your internet connection and try again.',
                 onRetry: () => ref.invalidate(subscriptionPlansProvider),
               ),
               data: (items) => LayoutBuilder(
@@ -100,6 +101,43 @@ class SubscriptionScreen extends ConsumerWidget {
                     Text(
                       'Your subscription status is securely verified before access is activated. '
                       'Payments and subscription access are managed through our secure billing system.',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Need an alternative payment method?',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'If you do not have access to M-Pesa, you can contact us to arrange an alternative payment method.',
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Call / WhatsApp: +254 738 219 953',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Email: hempongroup@gmail.com',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'Please include your account details and the subscription plan you want to activate.',
                     ),
                   ],
                 ),
@@ -256,7 +294,7 @@ class SubscriptionScreen extends ConsumerWidget {
         builder: (dialogContext) => AlertDialog(
           title: const Text('Payment submitted'),
           content: const Text(
-            'Your M-Pesa reference has been submitted for verification. InvoiceEasy will activate access only after Payment Engine verification.',
+            'Your M-Pesa reference has been submitted for verification. Your subscription will be activated once your payment is confirmed.',
           ),
           actions: [
             FilledButton(
@@ -400,7 +438,7 @@ class _AccessCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     days == null
-                        ? 'Billing access is controlled by the Payment Engine.'
+                        ? 'Your subscription and billing status are managed securely by InvoiceEasy.'
                         : days == 1
                         ? '1 day remaining'
                         : '$days days remaining',

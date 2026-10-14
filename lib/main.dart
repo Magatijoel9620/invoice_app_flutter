@@ -6,6 +6,7 @@ import 'app/app_shell.dart';
 import 'app/theme.dart';
 import 'providers/app_providers.dart';
 import 'core/providers/subscription_providers.dart';
+import 'providers/theme_provider.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/business_setup_screen.dart';
 import 'services/auth_service.dart';
@@ -58,27 +59,62 @@ class InvoiceEasyApp extends StatefulWidget {
 }
 
 class _AppState extends State<InvoiceEasyApp> {
-  ThemeMode mode = ThemeMode.system;
+  final ThemeProvider _themeProvider = ThemeProvider();
+  bool _themeReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTheme();
+  }
+
+  Future<void> _initializeTheme() async {
+    await _themeProvider.initialize();
+
+    if (!mounted) return;
+
+    _themeProvider.addListener(_onThemeChanged);
+
+    setState(() {
+      _themeReady = true;
+    });
+  }
+
+  void _onThemeChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _changeTheme(ThemeMode mode) {
+    _themeProvider.setThemeMode(mode);
+  }
+
+  @override
+  void dispose() {
+    _themeProvider.removeListener(_onThemeChanged);
+    _themeProvider.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (!_themeReady) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'InvoiceEasy',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: mode,
+      themeMode: _themeProvider.mode,
       home: CloudConfig.isConfigured
-          ? CloudSessionGate(
-              onThemeModeChanged: (value) {
-                setState(() => mode = value);
-              },
-            )
-          : _LocalSetupGate(
-              onThemeModeChanged: (value) {
-                setState(() => mode = value);
-              },
-            ),
+          ? CloudSessionGate(onThemeModeChanged: _changeTheme)
+          : _LocalSetupGate(onThemeModeChanged: _changeTheme),
     );
   }
 }
