@@ -188,3 +188,102 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+
+
+class PasswordRecoveryScreen extends StatefulWidget {
+  const PasswordRecoveryScreen({super.key, required this.onCompleted});
+
+  final VoidCallback onCompleted;
+
+  @override
+  State<PasswordRecoveryScreen> createState() => _PasswordRecoveryScreenState();
+}
+
+class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
+  final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    _confirmPassword.dispose();
+    super.dispose();
+  }
+
+  Future<void> _savePassword() async {
+    if (_password.text.length < 8) {
+      setState(() => _error = 'Use at least 8 characters for your password.');
+      return;
+    }
+    if (_password.text != _confirmPassword.text) {
+      setState(() => _error = 'The passwords do not match.');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await AuthService().updatePassword(_password.text);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your password has been updated.')),
+      );
+      widget.onCompleted();
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(Icons.lock_reset_rounded, size: 54, color: theme.colorScheme.primary),
+                      const SizedBox(height: 14),
+                      Text('Choose a new password', textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 8),
+                      const Text('Set a new password for your InvoiceEasy account.', textAlign: TextAlign.center),
+                      const SizedBox(height: 24),
+                      TextField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'New password', prefixIcon: Icon(Icons.lock_outline))),
+                      const SizedBox(height: 14),
+                      TextField(controller: _confirmPassword, obscureText: true, onSubmitted: (_) => _savePassword(), decoration: const InputDecoration(labelText: 'Confirm new password', prefixIcon: Icon(Icons.lock_reset_outlined))),
+                      if (_error != null) ...[
+                        const SizedBox(height: 14),
+                        Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+                      ],
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: _loading ? null : _savePassword,
+                        child: Text(_loading ? 'Updating…' : 'Update password'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

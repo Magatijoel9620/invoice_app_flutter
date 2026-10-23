@@ -5,6 +5,8 @@ import 'local_store.dart';
 import 'supabase_service.dart';
 
 class AuthService {
+  static const authRedirectUrl = 'invoiceeasy://auth/callback';
+
   SupabaseClient get _client => SupabaseService.client;
 
   User? get currentUser => _client.auth.currentUser;
@@ -32,6 +34,7 @@ class AuthService {
     final response = await _client.auth.signUp(
       email: email.trim(),
       password: password,
+      emailRedirectTo: authRedirectUrl,
     );
 
     final user = response.user;
@@ -44,7 +47,14 @@ class AuthService {
   }
 
   Future<void> resetPassword(String email) {
-    return _client.auth.resetPasswordForEmail(email.trim());
+    return _client.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: authRedirectUrl,
+    );
+  }
+
+  Future<void> updatePassword(String password) async {
+    await _client.auth.updateUser(UserAttributes(password: password));
   }
 
   Future<void> signOut() async {

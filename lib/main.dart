@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -129,8 +131,34 @@ class CloudSessionGate extends StatefulWidget {
 }
 
 class _CloudSessionGateState extends State<CloudSessionGate> {
+  StreamSubscription<AuthState>? _authSubscription;
+  bool _passwordRecoveryPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription = AuthService().authStateChanges.listen((state) {
+      if (state.event == AuthChangeEvent.passwordRecovery && mounted) {
+        setState(() => _passwordRecoveryPending = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_passwordRecoveryPending) {
+      return PasswordRecoveryScreen(
+        onCompleted: () {
+          if (mounted) setState(() => _passwordRecoveryPending = false);
+        },
+      );
+    }
     return StreamBuilder<AuthState>(
       stream: AuthService().authStateChanges,
       builder: (context, snapshot) {
