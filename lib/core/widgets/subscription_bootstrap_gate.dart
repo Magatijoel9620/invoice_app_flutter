@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_providers.dart';
+import '../errors/app_error.dart';
 
 class SubscriptionBootstrapGate extends ConsumerWidget {
   const SubscriptionBootstrapGate({super.key, required this.child});
@@ -28,7 +29,13 @@ class SubscriptionBootstrapGate extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
-                Text('$error', textAlign: TextAlign.center),
+                Text(
+                  AppErrorHandler.message(
+                    error,
+                    operation: 'subscription.bootstrap',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 14),
                 FilledButton(
                   onPressed: () =>

@@ -26,9 +26,13 @@ final subscriptionBootstrapProvider = FutureProvider<void>((ref) async {
   ref.invalidate(subscriptionStatusProvider);
 });
 
-final subscriptionPlansProvider = FutureProvider<List<SubscriptionPlan>>(
-  (ref) => ref.read(subscriptionRepositoryProvider).getPlans(),
-);
+final subscriptionPlansProvider = FutureProvider<List<SubscriptionPlan>>((
+  ref,
+) async {
+  // The plan catalogue is product-level data and must load even before a
+  // business or billing account exists. Account snapshots remain separate.
+  return ref.read(subscriptionRepositoryProvider).getPlans();
+});
 final currentSubscriptionProvider = FutureProvider<Subscription?>(
   (ref) => ref.read(subscriptionRepositoryProvider).getCurrentSubscription(),
 );

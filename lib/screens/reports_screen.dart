@@ -4,6 +4,7 @@ import '../models/business_profile.dart';
 import '../services/report_export_service.dart';
 
 import 'package:flutter/material.dart';
+import '../core/errors/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/formatters.dart';
@@ -514,7 +515,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         ),
       ),
       const SizedBox(height: 4),
-      Center(child: Text('$error', textAlign: TextAlign.center)),
+      Center(
+        child: Text(
+          AppErrorHandler.message(error, operation: 'reports.load'),
+          textAlign: TextAlign.center,
+        ),
+      ),
       const SizedBox(height: 8),
       Center(
         child: FilledButton.icon(
@@ -602,9 +608,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppErrorHandler.message(e, operation: 'reports.export'),
+          ),
+        ),
+      );
     }
   }
 }

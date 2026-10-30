@@ -77,8 +77,7 @@ class LocalStore {
         .getKeys()
         .where((key) => key.startsWith(anonymousPrefix))
         .toList();
-    final shouldMigrate =
-        _scope == _anonymousScope && anonymousKeys.isNotEmpty;
+    final shouldMigrate = _scope == _anonymousScope && anonymousKeys.isNotEmpty;
 
     if (shouldMigrate) {
       for (final from in anonymousKeys) {

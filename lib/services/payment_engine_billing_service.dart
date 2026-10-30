@@ -23,6 +23,10 @@ class PaymentEngineBillingService {
 
   Future<Map<String, dynamic>> snapshot() => call('snapshot');
 
+  /// Retrieves the product catalogue without requiring a configured business
+  /// or a billing account. This keeps plan selection available during setup.
+  Future<Map<String, dynamic>> catalogue() => call('catalogue');
+
   Future<Map<String, dynamic>> createPaymentIntent({
     required String planId,
     required String provider,

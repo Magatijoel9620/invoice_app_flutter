@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/providers/payment_engine_billing_providers.dart';
 import '../core/providers/subscription_providers.dart';
 import '../domain/models/subscription_models.dart';
+import '../core/errors/app_error.dart';
 
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
@@ -29,6 +30,14 @@ class SubscriptionScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           children: [
             _AccessCard(subscription: subscription.valueOrNull),
+            if (subscription.hasError) ...[
+              const SizedBox(height: 8),
+              _ErrorCard(
+                message:
+                    'Unable to retrieve your subscription status. Your current access has not been changed.',
+                onRetry: () => ref.invalidate(currentSubscriptionProvider),
+              ),
+            ],
             const SizedBox(height: 24),
             Text(
               'Choose your plan',
@@ -146,7 +155,10 @@ class SubscriptionScreen extends ConsumerWidget {
             const SizedBox(height: 18),
             transactions.when(
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, __) => _ErrorCard(
+                message: 'Unable to load payment history. Please try again.',
+                onRetry: () => ref.invalidate(paymentTransactionsProvider),
+              ),
               data: (items) => items.isEmpty
                   ? const SizedBox.shrink()
                   : Card(
@@ -256,7 +268,11 @@ class SubscriptionScreen extends ConsumerWidget {
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not start IntaSend payment: $error')),
+        const SnackBar(
+          content: Text(
+            'We could not start the payment. Check your payment status before trying again.',
+          ),
+        ),
       );
     }
   }
@@ -307,7 +323,11 @@ class SubscriptionScreen extends ConsumerWidget {
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not submit M-Pesa payment: $error')),
+        SnackBar(
+          content: Text(
+            AppErrorHandler.message(error, operation: 'billing.manual_payment'),
+          ),
+        ),
       );
     }
   }

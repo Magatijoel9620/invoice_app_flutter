@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/errors/app_error.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -84,7 +85,7 @@ class ErrorState extends StatelessWidget {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
-          Text('$error', textAlign: TextAlign.center),
+          Text(AppErrorHandler.message(error), textAlign: TextAlign.center),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: onRetry,

@@ -12,6 +12,7 @@ import 'providers/theme_provider.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/business_setup_screen.dart';
 import 'services/auth_service.dart';
+import 'core/errors/app_error.dart';
 import 'services/cloud_config.dart';
 import 'services/local_store.dart';
 import 'services/migration_service.dart';
@@ -228,19 +229,39 @@ class _AuthenticatedHomeState extends ConsumerState<_AuthenticatedHome> {
        * If the device is offline, bootstrap may fail. In that case we still
        * allow locally cached user-scoped data to be used.
        */
-      // Provision/refresh the server-side subscription before syncing so
-      // first-time cloud writes are evaluated against an initialized access
-      // record.
-      try {
-        await ref.read(subscriptionBootstrapProvider.future);
-      } catch (_) {
-        // Offline/unavailable subscription service: local data can continue.
-      }
-
+      // Restore the business to the cloud BEFORE calling the billing bridge.
+      // InvoiceEasy's billing bridge resolves its billing resource through the
+      // authenticated user's cloud businesses row. Calling subscription
+      // bootstrap first on a new account therefore returns "business not found".
       try {
         await ref.read(syncServiceProvider).bootstrap();
-      } catch (_) {
-        // Offline/local data remains usable.
+      } catch (error, stack) {
+        debugPrint(
+          'InvoiceEasy startup: sync bootstrap failed '
+          '(${error.runtimeType}); local data will remain available.',
+        );
+        debugPrintStack(stackTrace: stack);
+      }
+
+      // Only initialize billing after a configured business is available.
+      // This avoids a failed first-login snapshot being silently treated as
+      // an initialized trial. ensureSubscription is expected to be idempotent
+      // and must preserve any existing trial dates.
+      final localBusiness = await ref.read(businessRepositoryProvider).get();
+      final hasConfiguredBusiness =
+          localBusiness != null &&
+          localBusiness.name.trim().isNotEmpty &&
+          localBusiness.name.trim() != 'My Business';
+      if (hasConfiguredBusiness) {
+        try {
+          await ref.read(subscriptionBootstrapProvider.future);
+        } catch (error, stack) {
+          debugPrint(
+            'InvoiceEasy startup: subscription bootstrap failed '
+            '(${error.runtimeType}); access will be rechecked when online.',
+          );
+          debugPrintStack(stackTrace: stack);
+        }
       }
 
       if (!mounted) return;
@@ -260,13 +281,14 @@ class _AuthenticatedHomeState extends ConsumerState<_AuthenticatedHome> {
       setState(() {
         _ready = true;
       });
-    } catch (_) {
-      /*
-       * Scope initialization itself failed.
-       *
-       * We still allow the UI to continue rather than leaving the user
-       * permanently stuck on the loading screen.
-       */
+    } catch (error, stack) {
+      // Keep the app usable with account-scoped local data, but retain a
+      // debug-only diagnostic instead of silently hiding startup failures.
+      debugPrint(
+        'InvoiceEasy startup: user-scope initialization failed '
+        '(${error.runtimeType}).',
+      );
+      debugPrintStack(stackTrace: stack);
       if (!mounted) return;
 
       setState(() {
@@ -282,21 +304,44 @@ class _AuthenticatedHomeState extends ConsumerState<_AuthenticatedHome> {
      * Sync it to Supabase, but navigation must not depend on the cloud
      * operation succeeding.
      */
+    var cloudBusinessSynced = false;
     try {
       await ref.read(syncServiceProvider).sync();
-    } catch (_) {
-      // Local setup remains valid if cloud sync temporarily fails.
+      cloudBusinessSynced = ref.read(connectivityProvider).isOnline;
+    } catch (error, stack) {
+      debugPrint(
+        'InvoiceEasy setup: cloud sync did not complete '
+        '(${error.runtimeType}); keeping the locally saved business.',
+      );
+      debugPrintStack(stackTrace: stack);
+    }
+
+    // Trial/subscription bootstrap must run only after the cloud business row
+    // exists. Never reset or recreate a trial here; the billing service owns
+    // idempotency and existing subscription dates.
+    if (cloudBusinessSynced) {
+      try {
+        await ref.read(subscriptionBootstrapProvider.future);
+      } catch (error, stack) {
+        debugPrint(
+          'InvoiceEasy setup: subscription bootstrap deferred '
+          '(${error.runtimeType}).',
+        );
+        debugPrintStack(stackTrace: stack);
+      }
     }
 
     if (!mounted) return;
 
-    /*
-     * Refresh all user-scoped data after setup.
-     */
     ref.invalidate(businessProvider);
     ref.invalidate(customersProvider);
     ref.invalidate(productsProvider);
     ref.invalidate(invoicesProvider);
+    ref.invalidate(subscriptionBootstrapProvider);
+    ref.invalidate(subscriptionPlansProvider);
+    ref.invalidate(currentSubscriptionProvider);
+    ref.invalidate(subscriptionStatusProvider);
+    ref.invalidate(paymentTransactionsProvider);
 
     setState(() {
       _setupCompleted = true;
@@ -348,7 +393,10 @@ class _AuthenticatedHomeState extends ConsumerState<_AuthenticatedHome> {
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
-                  Text('$error', textAlign: TextAlign.center),
+                  Text(
+                    AppErrorHandler.message(error, operation: 'business.load'),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () {
@@ -424,7 +472,10 @@ class _LocalSetupGateState extends ConsumerState<_LocalSetupGate> {
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
-                  Text('$error', textAlign: TextAlign.center),
+                  Text(
+                    AppErrorHandler.message(error, operation: 'business.load'),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () {

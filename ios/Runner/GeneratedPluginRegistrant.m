@@ -24,6 +24,12 @@
 @import file_picker;
 #endif
 
+#if __has_include(<package_info_plus/FPPPackageInfoPlusPlugin.h>)
+#import <package_info_plus/FPPPackageInfoPlusPlugin.h>
+#else
+@import package_info_plus;
+#endif
+
 #if __has_include(<path_provider_foundation/PathProviderPlugin.h>)
 #import <path_provider_foundation/PathProviderPlugin.h>
 #else
@@ -60,6 +66,7 @@
   [AppLinksIosPlugin registerWithRegistrar:[registry registrarForPlugin:@"AppLinksIosPlugin"]];
   [ConnectivityPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"ConnectivityPlusPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
+  [FPPPackageInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPPackageInfoPlusPlugin"]];
   [PathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"PathProviderPlugin"]];
   [PrintingPlugin registerWithRegistrar:[registry registrarForPlugin:@"PrintingPlugin"]];
   [FPPSharePlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPSharePlusPlugin"]];

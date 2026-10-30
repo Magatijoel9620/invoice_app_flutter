@@ -121,7 +121,12 @@ void main() {
       ],
       'status': 'removed_status',
       'payments': [
-        {'id': 'p1', 'date': '2026-10-01T00:00:00Z', 'amount': 10, 'method': 'removed_method'},
+        {
+          'id': 'p1',
+          'date': '2026-10-01T00:00:00Z',
+          'amount': 10,
+          'method': 'removed_method',
+        },
       ],
     });
 

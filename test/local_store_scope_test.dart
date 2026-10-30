@@ -15,7 +15,9 @@ void main() {
 
     expect(migrated, isTrue);
     expect(LocalStore.currentScope, 'user-a');
-    expect(await LocalStore.readObject('profile'), {'name': 'Anonymous Business'});
+    expect(await LocalStore.readObject('profile'), {
+      'name': 'Anonymous Business',
+    });
   });
 
   test('all anonymous keys migrate, including newly introduced keys', () async {

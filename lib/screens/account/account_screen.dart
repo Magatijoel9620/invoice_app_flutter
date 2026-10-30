@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/app_providers.dart';
 import '../../services/cloud_config.dart';
 import '../../services/sync_status.dart';
+import '../../core/errors/app_error.dart';
+import '../about/about_screen.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
@@ -37,8 +39,19 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       final profile = await ref.read(accountProfileServiceProvider).get();
       _name.text = profile.fullName;
       _phone.text = profile.phone;
-    } catch (_) {}
-    loaded = true;
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppErrorHandler.message(error, operation: 'account.profile_load'),
+            ),
+          ),
+        );
+      }
+    } finally {
+      loaded = true;
+    }
   }
 
   Future<void> _save() async {
@@ -54,9 +67,13 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppErrorHandler.message(e, operation: 'account.profile_save'),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => saving = false);
@@ -71,15 +88,26 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         ref.invalidate(customersProvider);
         ref.invalidate(productsProvider);
         ref.invalidate(invoicesProvider);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Sync complete.')));
+        final status = ref.read(syncStatusProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status.pending == 0
+                  ? 'Everything is synced.'
+                  : '${status.pending} change(s) remain safely on this device. You can retry from this page.',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Sync failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppErrorHandler.message(e, operation: 'account.sync'),
+            ),
+          ),
+        );
       }
     }
   }
@@ -122,7 +150,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not sign out: $e'),
+          content: Text(
+            AppErrorHandler.message(e, operation: 'account.sign_out'),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -153,12 +183,12 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     try {
       await Supabase.instance.client.functions.invoke('delete-account');
       await ref.read(authServiceProvider).signOut();
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
-              'Account deletion needs the Supabase delete-account function. $e',
+              'We could not complete account deletion. Your account has not been confirmed as deleted. Please try again or contact support.',
             ),
           ),
         );
@@ -228,7 +258,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                   subtitle: Text(
                     sync.pending == 0
                         ? 'No pending local changes'
-                        : '${sync.pending} change(s) waiting to sync',
+                        : '${sync.pending} change(s) waiting to sync${sync.failed > 0 ? ' • ${sync.failed} need attention' : ''}. Your local data is safe.',
                   ),
                   trailing: IconButton(
                     tooltip: 'Sync now',
@@ -263,12 +293,28 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                   title: const Text('Reset password'),
                   onTap: () async {
                     final email = user?.email;
-                    if (email != null) {
+                    if (email == null || email.isEmpty) return;
+                    try {
                       await ref.read(authServiceProvider).resetPassword(email);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Password reset instructions sent.'),
+                            content: Text(
+                              'Password reset instructions will be sent if the account exists.',
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (error) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              AppErrorHandler.message(
+                                error,
+                                operation: 'account.password_reset',
+                              ),
+                            ),
                           ),
                         );
                       }
@@ -293,6 +339,18 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               title: const Text('Delete account'),
               subtitle: const Text('Permanently delete cloud account and data'),
               onTap: _deleteAccount,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.info_outline_rounded),
+              title: const Text('About InvoiceEasy'),
+              subtitle: const Text('App information, version and updates'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const AboutScreen())),
             ),
           ),
           const SizedBox(height: 24),

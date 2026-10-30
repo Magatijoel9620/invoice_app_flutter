@@ -91,16 +91,6 @@ class _SyncStatusBannerState extends ConsumerState<SyncStatusBanner> {
                     ),
                   ],
                 ),
-                if (content.showRetry) ...[
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _retry,
-                      child: const Text('RETRY'),
-                    ),
-                  ),
-                ],
               ],
             );
           }
@@ -117,29 +107,11 @@ class _SyncStatusBannerState extends ConsumerState<SyncStatusBanner> {
                   child: content.message,
                 ),
               ),
-              if (content.showRetry) ...[
-                const SizedBox(width: 8),
-                TextButton(onPressed: _retry, child: const Text('RETRY')),
-              ],
             ],
           );
         },
       ),
     );
-  }
-
-  Future<void> _retry() async {
-    try {
-      await ref.read(syncServiceProvider).retryNow();
-
-      ref.invalidate(businessProvider);
-      ref.invalidate(customersProvider);
-      ref.invalidate(productsProvider);
-      ref.invalidate(invoicesProvider);
-    } catch (_) {
-      // The sync provider remains in its failed state and the
-      // retry button remains available.
-    }
   }
 
   _BannerData? _content(ConnectivityService connectivity, SyncStatus sync) {
@@ -174,41 +146,18 @@ class _SyncStatusBannerState extends ConsumerState<SyncStatusBanner> {
       );
     }
 
-    if (sync.state == SyncState.error) {
-      return _BannerData(
-        icon: Icons.error_outline_rounded,
-        message: Text(
-          sync.message ?? 'Sync failed. Your local changes are safe.',
-        ),
-        showRetry: true,
-      );
-    }
+    // Detailed failures and retained queue items are shown in Account > Sync
+    // status. The global banner is reserved for transient/offline activity.
 
-    if (sync.pending > 0) {
-      return _BannerData(
-        icon: Icons.cloud_upload_outlined,
-        message: Text(
-          '${sync.pending} change'
-          '${sync.pending == 1 ? '' : 's'} waiting to sync.'
-          '${sync.failed > 0 ? ' ${sync.failed} failed operation'
-                    '${sync.failed == 1 ? '' : 's'} retained for retry.' : ''}',
-        ),
-        showRetry: true,
-      );
-    }
-
+    // Pending items remain visible in Account > Sync status. Avoid a banner
+    // permanently occupying the app after the automatic retry cycle ends.
     return null;
   }
 }
 
 class _BannerData {
-  const _BannerData({
-    required this.icon,
-    required this.message,
-    this.showRetry = false,
-  });
+  const _BannerData({required this.icon, required this.message});
 
   final IconData icon;
   final Widget message;
-  final bool showRetry;
 }

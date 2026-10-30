@@ -43,21 +43,29 @@ void main() {
 
   test('preserves cancelled and draft states', () {
     expect(
-      effectiveInvoiceStatus(invoice(status: InvoiceStatus.cancelled), 16, now: now),
+      effectiveInvoiceStatus(
+        invoice(status: InvoiceStatus.cancelled),
+        16,
+        now: now,
+      ),
       InvoiceStatus.cancelled,
     );
     expect(
-      effectiveInvoiceStatus(invoice(status: InvoiceStatus.draft), 16, now: now),
+      effectiveInvoiceStatus(
+        invoice(status: InvoiceStatus.draft),
+        16,
+        now: now,
+      ),
       InvoiceStatus.draft,
     );
   });
 
   test('detects partial payment before overdue state', () {
-    final value = invoice(
-      paid: 100,
-      dueDate: DateTime(2026, 10, 10),
+    final value = invoice(paid: 100, dueDate: DateTime(2026, 10, 10));
+    expect(
+      effectiveInvoiceStatus(value, 16, now: now),
+      InvoiceStatus.partiallyPaid,
     );
-    expect(effectiveInvoiceStatus(value, 16, now: now), InvoiceStatus.partiallyPaid);
   });
 
   test('detects overdue unpaid invoice', () {

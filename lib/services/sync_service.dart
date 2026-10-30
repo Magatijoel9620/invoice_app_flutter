@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'connectivity_service.dart';
+import '../core/errors/app_error.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -30,6 +31,7 @@ class SyncService {
   final ConnectivityService connectivity;
 
   bool _running = false;
+  Future<void>? _syncInFlight;
   bool _started = false;
   ConnectivityState? _lastConnectivityState;
 
@@ -95,7 +97,23 @@ class SyncService {
     await sync();
   }
 
-  Future<void> sync() async {
+  Future<void> sync() {
+    // Coalesce concurrent startup, reconnect and manual sync requests. A
+    // second caller awaits the first sync instead of returning early while
+    // cloud data is still being restored into the local account scope.
+    final active = _syncInFlight;
+    if (active != null) return active;
+
+    final future = _performSync();
+    _syncInFlight = future;
+    return future.whenComplete(() {
+      if (identical(_syncInFlight, future)) {
+        _syncInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _performSync() async {
     if (_running) return;
     if (!connectivity.isOnline) {
       status.setState(
@@ -629,18 +647,9 @@ class SyncService {
 
   String _friendlyError(Object error) {
     if (_isConnectivityError(error)) {
-      return 'Internet connection was lost. Your local changes are safe and will retry automatically.';
+      return 'Connection interrupted. Your changes are saved on this device and will retry when you are online.';
     }
-    if (error is AuthException) return error.message;
-    if (error is PostgrestException) {
-      final message = error.message.toLowerCase();
-      if (message.contains('row-level security') ||
-          message.contains('permission denied')) {
-        return 'Cloud writes are currently restricted. Check your InvoiceEasy subscription and try again.';
-      }
-      return error.message;
-    }
-    return error.toString();
+    return AppErrorHandler.message(error, operation: 'sync.upload');
   }
 }
 

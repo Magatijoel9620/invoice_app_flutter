@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'local_store.dart';
 import 'supabase_service.dart';
 
 class AuthService {
@@ -21,12 +20,9 @@ class AuthService {
       password: password,
     );
 
-    final user = response.user;
-
-    if (user != null) {
-      await LocalStore.switchToUserScope(user.id);
-    }
-
+    // User-scoped local storage is initialized by _AuthenticatedHome after
+    // the auth-state transition. Keeping scope switching here creates a race
+    // with that startup gate and can make the business profile appear empty.
     return response;
   }
 
@@ -37,13 +33,17 @@ class AuthService {
       emailRedirectTo: authRedirectUrl,
     );
 
-    final user = response.user;
-
-    if (user != null && response.session != null) {
-      await LocalStore.switchToUserScope(user.id);
-    }
-
+    // Scope migration is handled once by _AuthenticatedHome when a session
+    // is established, not from the auth request and auth listener in parallel.
     return response;
+  }
+
+  Future<void> resendConfirmation(String email) {
+    return _client.auth.resend(
+      type: OtpType.signup,
+      email: email.trim(),
+      emailRedirectTo: authRedirectUrl,
+    );
   }
 
   Future<void> resetPassword(String email) {

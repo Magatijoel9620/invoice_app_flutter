@@ -12,20 +12,23 @@ void main() {
     await LocalStore.initialize();
   });
 
-  test('business repository saves local data and queues the mutation', () async {
-    final repository = BusinessRepository();
-    final business = BusinessProfile(
-      id: 'b1',
-      name: 'Acme Ltd',
-      businessType: 'Services',
-    );
+  test(
+    'business repository saves local data and queues the mutation',
+    () async {
+      final repository = BusinessRepository();
+      final business = BusinessProfile(
+        id: 'b1',
+        name: 'Acme Ltd',
+        businessType: 'Services',
+      );
 
-    await repository.save(business);
+      await repository.save(business);
 
-    final stored = await repository.get();
-    expect(stored?.name, 'Acme Ltd');
-    expect((await SyncQueue().all()).single.entity, 'business');
-  });
+      final stored = await repository.get();
+      expect(stored?.name, 'Acme Ltd');
+      expect((await SyncQueue().all()).single.entity, 'business');
+    },
+  );
 
   test('invoice repository sorts by issue date descending', () async {
     final repository = InvoiceRepository();
@@ -52,27 +55,30 @@ void main() {
     expect(invoices.map((invoice) => invoice.id), ['new', 'old']);
   });
 
-  test('invoice deletion is local-first and queues a tombstone mutation', () async {
-    final repository = InvoiceRepository();
-    final invoice = Invoice(
-      id: 'i1',
-      businessId: 'b1',
-      customerId: 'c1',
-      customerName: 'Customer',
-      number: 'INV-1',
-      issueDate: DateTime(2026, 10, 1),
-      dueDate: DateTime(2026, 10, 15),
-      lines: const [],
-    );
+  test(
+    'invoice deletion is local-first and queues a tombstone mutation',
+    () async {
+      final repository = InvoiceRepository();
+      final invoice = Invoice(
+        id: 'i1',
+        businessId: 'b1',
+        customerId: 'c1',
+        customerName: 'Customer',
+        number: 'INV-1',
+        issueDate: DateTime(2026, 10, 1),
+        dueDate: DateTime(2026, 10, 15),
+        lines: const [],
+      );
 
-    await repository.upsert(invoice);
-    await repository.delete(invoice.id);
+      await repository.upsert(invoice);
+      await repository.delete(invoice.id);
 
-    expect(await repository.all(), isEmpty);
-    final queue = await SyncQueue().all();
-    expect(queue, hasLength(1));
-    expect(queue.single.operation, 'delete');
-    expect(queue.single.entity, 'invoice');
-    expect(queue.single.id, 'i1');
-  });
+      expect(await repository.all(), isEmpty);
+      final queue = await SyncQueue().all();
+      expect(queue, hasLength(1));
+      expect(queue.single.operation, 'delete');
+      expect(queue.single.entity, 'invoice');
+      expect(queue.single.id, 'i1');
+    },
+  );
 }

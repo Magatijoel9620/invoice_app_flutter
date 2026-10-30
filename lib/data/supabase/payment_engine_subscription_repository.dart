@@ -10,8 +10,8 @@ class PaymentEngineSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Future<List<SubscriptionPlan>> getPlans() async {
-    final snapshot = await _billing.snapshot();
-    return _plans(snapshot);
+    final catalogue = await _billing.catalogue();
+    return _plans(catalogue);
   }
 
   @override

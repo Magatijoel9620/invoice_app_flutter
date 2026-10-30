@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business_profile.dart';
+import '../core/errors/app_error.dart';
 import '../providers/app_providers.dart';
 import 'widgets/app_card.dart';
 
@@ -76,6 +77,16 @@ class _BusinessSetupState extends ConsumerState<BusinessSetupScreen> {
       if (!mounted) return;
 
       widget.onComplete();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppErrorHandler.message(error, operation: 'business.save'),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
