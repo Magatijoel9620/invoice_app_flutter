@@ -6,6 +6,8 @@ import '../models/product.dart';
 import '../providers/app_providers.dart';
 import '../core/formatters.dart';
 import 'widgets/app_card.dart';
+import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -74,6 +76,8 @@ class ProductsScreen extends ConsumerWidget {
                                   children: [
                                     Text(
                                       x.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w800,
                                       ),
@@ -87,10 +91,19 @@ class ProductsScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              Text(
-                                money.format(x.price),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 112,
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    money.format(x.price),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -101,8 +114,14 @@ class ProductsScreen extends ConsumerWidget {
                     .toList(),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('$e'),
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: RecordListLoadingState(rows: 3, showHeader: false),
+            ),
+            error: (e, _) => ErrorState(
+              error: e,
+              onRetry: () => ref.invalidate(productsProvider),
+            ),
           ),
         ],
       ),

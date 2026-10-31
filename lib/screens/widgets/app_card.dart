@@ -10,12 +10,19 @@ class AppCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(18),
     this.onTap,
   });
+
   @override
-  Widget build(BuildContext c) => Card(
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(padding: padding, child: child),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        hoverColor: scheme.primary.withValues(alpha: .035),
+        splashColor: scheme.primary.withValues(alpha: .07),
+        child: Padding(padding: padding, child: child),
+      ),
+    );
+  }
 }

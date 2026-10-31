@@ -300,7 +300,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                              'Password reset instructions will be sent if the account exists.',
+                              'Check your email for password reset instructions.',
                             ),
                           ),
                         );

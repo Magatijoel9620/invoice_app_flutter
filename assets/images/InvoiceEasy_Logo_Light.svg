@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 210" role="img" aria-label="InvoiceEasy">
+  <defs>
+    <linearGradient id="page" x1="12" y1="12" x2="108" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#087E83"/>
+      <stop offset="0.56" stop-color="#079C8C"/>
+      <stop offset="1" stop-color="#16B98F"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="68" y1="8" x2="102" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7AE8D3"/>
+      <stop offset="1" stop-color="#38CFAF"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(28 41) scale(1.02)">
+    <path d="M24 7.5h44.5L104 43v60.5c0 10-8 18-18 18H24c-10 0-18-8-18-18v-78c0-10 8-18 18-18Z" fill="url(#page)"/>
+    <path d="M68.5 7.5V28c0 8.3 6.7 15 15 15H104L68.5 7.5Z" fill="url(#fold)"/>
+    <path d="M68.5 7.5V28c0 8.3 6.7 15 15 15H104" fill="none" stroke="#075F66" stroke-opacity=".28" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="25" y="54" width="42" height="6.5" rx="3.25" fill="#F4FFFC"/>
+    <rect x="25" y="67" width="51" height="6.5" rx="3.25" fill="#F4FFFC" fill-opacity=".92"/>
+    <rect x="25" y="80" width="31" height="6.5" rx="3.25" fill="#F4FFFC" fill-opacity=".92"/>
+    <circle cx="83" cy="91" r="23" fill="#075F61" stroke="#F4FFFC" stroke-width="3.5"/>
+    <path d="m72.5 90.5 7.3 7.1 14.4-16.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="198" y="139" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-3.2" fill="#17323A">Invoice</text>
+  <text x="497.4" y="139" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="92" font-weight="750" letter-spacing="-3.2" fill="#078D7C">Easy</text>
+</svg>

@@ -5,6 +5,7 @@ import '../core/formatters.dart';
 import '../providers/app_providers.dart';
 import 'invoice_details_screen.dart';
 import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 
 class ArchivedInvoicesScreen extends ConsumerWidget {
   const ArchivedInvoicesScreen({super.key});
@@ -14,7 +15,10 @@ class ArchivedInvoicesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Archived invoices')),
       body: data.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(18),
+          child: RecordListLoadingState(rows: 3, showHeader: false),
+        ),
         error: (e, _) => ErrorState(
           error: e,
           onRetry: () => ref.invalidate(invoicesProvider),

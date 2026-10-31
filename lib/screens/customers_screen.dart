@@ -8,6 +8,7 @@ import '../providers/app_providers.dart';
 import 'customer_profile_screen.dart';
 import 'widgets/app_card.dart';
 import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 
 class CustomersScreen extends ConsumerStatefulWidget {
   const CustomersScreen({super.key});
@@ -30,7 +31,13 @@ class _CustomersState extends ConsumerState<CustomersScreen> {
         label: const Text('Customer'),
       ),
       body: data.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(18),
+          child: RecordListLoadingState(
+            rows: 4,
+            showSearch: true,
+          ),
+        ),
         error: (error, _) => ErrorState(
           error: error,
           onRetry: () => ref.invalidate(customersProvider),

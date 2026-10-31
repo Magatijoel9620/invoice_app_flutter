@@ -15,6 +15,7 @@ import '../providers/app_providers.dart';
 import 'customer_profile_screen.dart';
 import 'widgets/app_card.dart';
 import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -51,7 +52,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           await ref.read(invoicesProvider.future);
         },
         child: invoices.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Padding(
+            padding: EdgeInsets.all(18),
+            child: ReportsLoadingState(),
+          ),
           error: (e, _) => _error(context, ref, e),
           data: (all) => _report(
             context,
@@ -163,39 +167,41 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 14),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.55,
-          children: [
-            _metric(
-              context,
-              'Invoiced',
-              compactMoney(invoiced),
-              Icons.receipt_long_outlined,
-            ),
-            _metric(
-              context,
-              'Collected',
-              compactMoney(collected),
-              Icons.payments_outlined,
-            ),
-            _metric(
-              context,
-              'Outstanding',
-              compactMoney(outstanding),
-              Icons.account_balance_wallet_outlined,
-            ),
-            _metric(
-              context,
-              'Overdue',
-              '${overdue.length}',
-              Icons.warning_amber_rounded,
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) => GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: constraints.maxWidth < 360 ? 1.3 : 1.55,
+            children: [
+              _metric(
+                context,
+                'Invoiced',
+                compactMoney(invoiced),
+                Icons.receipt_long_outlined,
+              ),
+              _metric(
+                context,
+                'Collected',
+                compactMoney(collected),
+                Icons.payments_outlined,
+              ),
+              _metric(
+                context,
+                'Outstanding',
+                compactMoney(outstanding),
+                Icons.account_balance_wallet_outlined,
+              ),
+              _metric(
+                context,
+                'Overdue',
+                '${overdue.length}',
+                Icons.warning_amber_rounded,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 14),
         _collectionCard(context, collection, collected, invoiced),
@@ -421,11 +427,18 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          values[index] == 0
-                              ? '—'
-                              : compactMoney(values[index]),
-                          style: Theme.of(context).textTheme.labelSmall,
+                        SizedBox(
+                          width: double.infinity,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              values[index] == 0
+                                  ? '—'
+                                  : compactMoney(values[index]),
+                              maxLines: 1,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 5),
                         Container(
@@ -492,11 +505,27 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       children: [
         Icon(icon, size: 21),
         const Spacer(),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+        SizedBox(
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
         ),
-        Text(label, style: Theme.of(context).textTheme.labelMedium),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
       ],
     ),
   );

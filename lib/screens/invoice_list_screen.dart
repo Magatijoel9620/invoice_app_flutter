@@ -8,6 +8,7 @@ import '../providers/app_providers.dart';
 import 'invoice_details_screen.dart';
 import 'widgets/app_card.dart';
 import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 
 class InvoiceListScreen extends ConsumerStatefulWidget {
   final VoidCallback onCreate;
@@ -34,7 +35,11 @@ class _InvoiceListState extends ConsumerState<InvoiceListScreen> {
     final data = ref.watch(invoicesProvider);
 
     return data.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const RecordListLoadingState(
+        rows: 3,
+        showSearch: true,
+        showFilters: true,
+      ),
       error: (error, _) => ErrorState(
         error: error,
         onRetry: () => ref.invalidate(invoicesProvider),
@@ -141,80 +146,107 @@ class _InvoiceListState extends ConsumerState<InvoiceListScreen> {
                               InvoiceDetailsScreen(invoiceId: invoice.id),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: _statusColor(
-                              effectiveInvoiceStatus(invoice, invoice.vatRate),
-                            ).withValues(alpha: .12),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final status = effectiveInvoiceStatus(
+                            invoice,
+                            invoice.vatRate,
+                          );
+                          final avatar = CircleAvatar(
+                            backgroundColor: _statusColor(status).withValues(
+                              alpha: .12,
+                            ),
                             child: Icon(
-                              _statusIcon(
-                                effectiveInvoiceStatus(
-                                  invoice,
-                                  invoice.vatRate,
-                                ),
-                              ),
-                              color: _statusColor(
-                                effectiveInvoiceStatus(
-                                  invoice,
-                                  invoice.vatRate,
-                                ),
-                              ),
+                              _statusIcon(status),
+                              color: _statusColor(status),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  invoice.number,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(invoice.customerName),
-                                const SizedBox(height: 3),
-                                Text(
-                                  '${shortDate.format(invoice.issueDate)} • Due ${shortDate.format(invoice.dueDate)}',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                          );
+                          final details = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                money.format(invoice.total(invoice.vatRate)),
+                                invoice.number,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 3),
                               Text(
-                                invoiceStatusLabel(
-                                  effectiveInvoiceStatus(
-                                    invoice,
-                                    invoice.vatRate,
-                                  ),
-                                ).toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: _statusColor(
-                                    effectiveInvoiceStatus(
-                                      invoice,
-                                      invoice.vatRate,
+                                invoice.customerName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                '${shortDate.format(invoice.issueDate)} • Due ${shortDate.format(invoice.dueDate)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          );
+                          final totalAndStatus = Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 132,
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    money.format(
+                                      invoice.total(invoice.vatRate),
+                                    ),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 4),
+                              Text(
+                                invoiceStatusLabel(status).toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: _statusColor(status),
+                                ),
+                              ),
                             ],
-                          ),
-                          const Icon(Icons.chevron_right),
-                        ],
+                          );
+
+                          if (constraints.maxWidth < 410) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    avatar,
+                                    const SizedBox(width: 10),
+                                    Expanded(child: details),
+                                    const Icon(Icons.chevron_right),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                totalAndStatus,
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              avatar,
+                              const SizedBox(width: 12),
+                              Expanded(child: details),
+                              const SizedBox(width: 8),
+                              totalAndStatus,
+                              const Icon(Icons.chevron_right),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),

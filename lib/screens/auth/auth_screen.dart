@@ -82,9 +82,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Password reset instructions sent if the account exists.',
-            ),
+            content: Text('Check your email for password reset instructions.'),
           ),
         );
       }
@@ -119,10 +117,11 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(
-                          Icons.receipt_long_rounded,
-                          size: 54,
-                          color: theme.colorScheme.primary,
+                        Image.asset(
+                          'assets/images/InvoiceEasy_Mark.png',
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: 14),
                         Text(

@@ -10,6 +10,7 @@ import '../providers/app_providers.dart';
 import 'invoice_details_screen.dart';
 import 'widgets/app_card.dart';
 import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 import 'widgets/stat_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -32,7 +33,7 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           business.when(
             data: (b) => _greeting(context, b.name),
-            loading: () => const LinearProgressIndicator(),
+            loading: () => const RecordListLoadingState(rows: 0),
             error: (e, _) => _errorCard(
               context,
               'Business unavailable',
@@ -48,10 +49,7 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: 18),
 
           invoices.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(36),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const DashboardLoadingState(),
             error: (e, _) => _errorCard(
               context,
               'Could not load invoices',
@@ -73,28 +71,35 @@ class DashboardScreen extends ConsumerWidget {
     final hour = DateTime.now().hour;
 
     String greeting;
-    String emoji;
+    IconData greetingIcon;
 
     if (hour >= 5 && hour < 12) {
       greeting = 'Good morning';
-      emoji = '👋';
+      greetingIcon = Icons.waving_hand_rounded;
     } else if (hour >= 12 && hour < 17) {
       greeting = 'Good afternoon';
-      emoji = '☀️';
+      greetingIcon = Icons.wb_sunny_rounded;
     } else if (hour >= 17 && hour < 21) {
       greeting = 'Good evening';
-      emoji = '🌆';
+      greetingIcon = Icons.wb_twilight_rounded;
     } else {
       greeting = 'Good night';
-      emoji = '🌙';
+      greetingIcon = Icons.nights_stay_rounded;
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '$greeting $emoji',
-          style: Theme.of(context).textTheme.titleMedium,
+        Row(
+          children: [
+            Text(greeting, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(width: 6),
+            Icon(
+              greetingIcon,
+              size: 18,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ],
         ),
         const SizedBox(height: 3),
         Text(
@@ -191,35 +196,59 @@ class DashboardScreen extends ConsumerWidget {
         // ---------------------------------------------------------------------
         // KPI CARDS
         // ---------------------------------------------------------------------
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.55,
-          children: [
-            StatCard(
-              label: 'Invoiced',
-              value: compactMoney(invoiced),
-              icon: Icons.receipt_long_rounded,
-            ),
-            StatCard(
-              label: 'Collected',
-              value: compactMoney(collected),
-              icon: Icons.payments_rounded,
-            ),
-            StatCard(
-              label: 'Outstanding',
-              value: compactMoney(outstanding),
-              icon: Icons.account_balance_wallet_rounded,
-            ),
-            StatCard(
-              label: 'Overdue',
-              value: '$overdue',
-              icon: Icons.warning_amber_rounded,
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 620;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: compact ? 136 : 140,
+                  child: StatCard(
+                    label: 'Invoiced',
+                    value: compactMoney(invoiced),
+                    icon: Icons.receipt_long_rounded,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: compact ? 100 : 108,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: StatCard(
+                          compact: true,
+                          label: 'Collected',
+                          value: compactMoney(collected),
+                          icon: Icons.payments_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: StatCard(
+                          compact: true,
+                          label: 'Outstanding',
+                          value: compactMoney(outstanding),
+                          icon: Icons.account_balance_wallet_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: compact ? 70 : 76,
+                  child: StatCard(
+                    compact: true,
+                    label: 'Overdue',
+                    value: '$overdue',
+                    icon: Icons.warning_amber_rounded,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
 
         const SizedBox(height: 18),
@@ -510,46 +539,80 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _invoiceRow(BuildContext context, Invoice i) {
     final status = effectiveInvoiceStatus(i, i.vatRate);
-
-    return Row(
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(radius: 20, child: Icon(_statusIcon(status), size: 20)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                i.number,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              Text(
-                i.customerName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                shortDate.format(i.issueDate),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
+        Text(
+          i.number,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
+        Text(
+          i.customerName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          shortDate.format(i.issueDate),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+    final totalAndStatus = Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 150),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
               money.format(i.total(i.vatRate)),
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-            const SizedBox(height: 2),
-            Text(
-              invoiceStatusLabel(status).toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          invoiceStatusLabel(status).toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall,
         ),
       ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final avatar = CircleAvatar(
+          radius: 20,
+          child: Icon(_statusIcon(status), size: 20),
+        );
+        if (constraints.maxWidth < 390) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  avatar,
+                  const SizedBox(width: 10),
+                  Expanded(child: details),
+                ],
+              ),
+              const SizedBox(height: 9),
+              totalAndStatus,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            avatar,
+            const SizedBox(width: 12),
+            Expanded(child: details),
+            const SizedBox(width: 8),
+            totalAndStatus,
+          ],
+        );
+      },
     );
   }
 
@@ -666,10 +729,11 @@ class _TrendLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Row(
+    return Wrap(
+      spacing: 20,
+      runSpacing: 8,
       children: [
         _LegendDot(color: scheme.primary, label: 'Invoiced'),
-        const SizedBox(width: 20),
         _LegendDot(color: scheme.secondary, label: 'Collected'),
       ],
     );

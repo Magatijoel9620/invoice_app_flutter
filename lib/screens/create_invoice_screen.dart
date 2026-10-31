@@ -112,177 +112,227 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
             ),
         ],
       ),
-      body: Form(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 120),
-          children: [
-            _section(
-              'Invoice details',
-              Column(
+      body: LayoutBuilder(
+        builder: (context, constraints) => Center(
+          child: SizedBox(
+            width: constraints.maxWidth > 1120 ? 1120 : constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Form(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 120),
                 children: [
-                  _customerPicker(customers),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _dateField(
-                          'Issue date',
-                          issue,
-                          (value) => setState(() => issue = value),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _dateField(
-                          'Due date',
-                          due,
-                          (value) => setState(() => due = value),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: 8,
+                  _section(
+                    'Invoice details',
+                    Column(
                       children: [
-                        _duePreset('Today', 0),
-                        _duePreset('7 days', 7),
-                        _duePreset('14 days', 14),
-                        _duePreset('30 days', 30),
+                        _customerPicker(customers),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _dateField(
+                                'Issue date',
+                                issue,
+                                (value) => setState(() => issue = value),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _dateField(
+                                'Due date',
+                                due,
+                                (value) => setState(() => due = value),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Wrap(
+                            spacing: 8,
+                            children: [
+                              _duePreset('Today', 0),
+                              _duePreset('7 days', 7),
+                              _duePreset('14 days', 14),
+                              _duePreset('30 days', 30),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            _section(
-              'Items',
-              Column(
-                children: [
-                  if (lines.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      child: Text(
-                        'Add products, services or custom line items.',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 12),
+                  _section(
+                    'Items',
+                    Column(
+                      children: [
+                        if (lines.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Text(
+                              'Add products, services or custom line items.',
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ...lines.asMap().entries.map(
+                          (entry) => _lineTile(entry.key, entry.value),
                         ),
-                      ),
-                    ),
-                  ...lines.asMap().entries.map(
-                    (entry) => _lineTile(entry.key, entry.value),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _addCustomLine,
-                          icon: const Icon(Icons.edit_note),
-                          label: const Text('Custom item'),
+                        const SizedBox(height: 8),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final customItemButton = OutlinedButton.icon(
+                              onPressed: _addCustomLine,
+                              icon: const Icon(Icons.edit_note),
+                              label: const Text('Custom item'),
+                            );
+                            final catalogButton = FilledButton.icon(
+                              onPressed: () => _addCatalog(products),
+                              icon: const Icon(Icons.inventory_2_outlined),
+                              label: const Text('Catalog'),
+                            );
+
+                            if (constraints.maxWidth < 400) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  customItemButton,
+                                  const SizedBox(height: 8),
+                                  catalogButton,
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                Expanded(child: customItemButton),
+                                const SizedBox(width: 10),
+                                Expanded(child: catalogButton),
+                              ],
+                            );
+                          },
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () => _addCatalog(products),
-                          icon: const Icon(Icons.inventory_2_outlined),
-                          label: const Text('Catalog'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _section(
+                    'Totals & tax',
+                    Column(
+                      children: [
+                        _summary('Subtotal', subtotal),
+                        TextField(
+                          controller: discount,
+                          onChanged: (_) => setState(() {}),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Discount',
+                            prefixText: 'KSh ',
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            _section(
-              'Totals & tax',
-              Column(
-                children: [
-                  _summary('Subtotal', subtotal),
-                  TextField(
-                    controller: discount,
-                    onChanged: (_) => setState(() {}),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+                        const SizedBox(height: 8),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Charge VAT'),
+                          subtitle: Text(
+                            includeVat
+                                ? 'VAT applied to taxable items'
+                                : 'No VAT on this invoice',
+                          ),
+                          value: includeVat,
+                          onChanged: (value) =>
+                              setState(() => includeVat = value),
+                        ),
+                        if (includeVat)
+                          TextFormField(
+                            initialValue: vatRate.toStringAsFixed(0),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'VAT rate (%)',
+                            ),
+                            onChanged: (value) => setState(
+                              () => vatRate = double.tryParse(value) ?? vatRate,
+                            ),
+                          ),
+                        if (includeVat) _summary('VAT', tax),
+                        const Divider(height: 26),
+                        _summary('Total', total, bold: true),
+                      ],
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Discount',
-                      prefixText: 'KSh ',
-                    ),
                   ),
-                  const SizedBox(height: 8),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Charge VAT'),
-                    subtitle: Text(
-                      includeVat
-                          ? 'VAT applied to taxable items'
-                          : 'No VAT on this invoice',
-                    ),
-                    value: includeVat,
-                    onChanged: (value) => setState(() => includeVat = value),
-                  ),
-                  if (includeVat)
-                    TextFormField(
-                      initialValue: vatRate.toStringAsFixed(0),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
+                  const SizedBox(height: 12),
+                  _section(
+                    'Notes',
+                    TextField(
+                      controller: notes,
+                      maxLines: 4,
                       decoration: const InputDecoration(
-                        labelText: 'VAT rate (%)',
-                      ),
-                      onChanged: (value) => setState(
-                        () => vatRate = double.tryParse(value) ?? vatRate,
+                        hintText:
+                            'Payment terms, thank-you note, delivery notes...',
                       ),
                     ),
-                  if (includeVat) _summary('VAT', tax),
-                  const Divider(height: 26),
-                  _summary('Total', total, bold: true),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            _section(
-              'Notes',
-              TextField(
-                controller: notes,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: 'Payment terms, thank-you note, delivery notes...',
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: saving ? null : () => _save(business, draft: true),
-                  child: const Text('Save draft'),
-                ),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final saveDraftButton = OutlinedButton(
+                    onPressed: saving
+                        ? null
+                        : () => _save(business, draft: true),
+                    child: const Text('Save draft'),
+                  );
+                  final createButton = FilledButton.icon(
+                    onPressed: saving
+                        ? null
+                        : () => _save(business, draft: false),
+                    icon: Icon(
+                      editing ? Icons.save_rounded : Icons.send_rounded,
+                    ),
+                    label: Text(editing ? 'Save changes' : 'Create & send'),
+                  );
+
+                  if (constraints.maxWidth < 480) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        saveDraftButton,
+                        const SizedBox(height: 8),
+                        createButton,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(child: saveDraftButton),
+                      const SizedBox(width: 10),
+                      Expanded(flex: 2, child: createButton),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: FilledButton.icon(
-                  onPressed: saving
-                      ? null
-                      : () => _save(business, draft: false),
-                  icon: Icon(editing ? Icons.save_rounded : Icons.send_rounded),
-                  label: Text(editing ? 'Save changes' : 'Create & send'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -303,6 +353,7 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
     children: [
       Expanded(
         child: DropdownButtonFormField<String>(
+          isExpanded: true,
           value:
               customer?.id ??
               widget.invoice?.customerId ??
@@ -390,31 +441,38 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
       onTap: () => _editLine(index, line),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    line.description,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final description = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  line.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${_quantity(line.quantity)} × ${money.format(line.unitPrice)}${line.taxable ? ' • Taxable' : ''}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${_quantity(line.quantity)} × ${money.format(line.unitPrice)}${line.taxable ? ' • Taxable' : ''}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            );
+            final amount = ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 150),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  money.format(line.total),
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
-            ),
-            Text(
-              money.format(line.total),
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            PopupMenuButton<String>(
+            );
+            final menu = PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'edit') _editLine(index, line);
                 if (value == 'delete') setState(() => lines.removeAt(index));
@@ -423,8 +481,29 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
                 PopupMenuItem(value: 'edit', child: Text('Edit item')),
                 PopupMenuItem(value: 'delete', child: Text('Remove')),
               ],
-            ),
-          ],
+            );
+
+            if (constraints.maxWidth < 420) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [Expanded(child: description), menu],
+                  ),
+                  const SizedBox(height: 7),
+                  Align(alignment: Alignment.centerRight, child: amount),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: description),
+                const SizedBox(width: 8),
+                amount,
+                menu,
+              ],
+            );
+          },
         ),
       ),
     ),
@@ -439,15 +518,22 @@ class _CreateInvoiceState extends ConsumerState<CreateInvoiceScreen> {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontWeight: bold ? FontWeight.w800 : null),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(fontWeight: bold ? FontWeight.w800 : null),
+          ),
         ),
-        Text(
-          money.format(value),
-          style: TextStyle(
-            fontWeight: bold ? FontWeight.w900 : FontWeight.w600,
-            fontSize: bold ? 19 : null,
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            money.format(value),
+            textAlign: TextAlign.right,
+            softWrap: true,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.w900 : FontWeight.w600,
+              fontSize: bold ? 19 : null,
+            ),
           ),
         ),
       ],

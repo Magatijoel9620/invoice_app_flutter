@@ -14,6 +14,8 @@ import '../providers/app_providers.dart';
 import '../services/pdf_service.dart';
 import '../services/share_service.dart';
 import 'create_invoice_screen.dart';
+import 'widgets/empty_state.dart';
+import 'widgets/skeleton_loader.dart';
 
 class InvoiceDetailsScreen extends ConsumerStatefulWidget {
   final String invoiceId;
@@ -29,12 +31,31 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final invoices = ref.watch(invoicesProvider).valueOrNull ?? <Invoice>[];
+    final invoicesState = ref.watch(invoicesProvider);
+    final invoices = invoicesState.valueOrNull ?? <Invoice>[];
     final invoice = invoices
         .where((item) => item.id == widget.invoiceId)
         .firstOrNull;
     final business = ref.watch(businessProvider).valueOrNull;
 
+    if (invoicesState.isLoading && invoicesState.valueOrNull == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Invoice details')),
+        body: const Padding(
+          padding: EdgeInsets.all(18),
+          child: RecordListLoadingState(rows: 3, showHeader: false),
+        ),
+      );
+    }
+    if (invoicesState.hasError && invoicesState.valueOrNull == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Invoice details')),
+        body: ErrorState(
+          error: invoicesState.error ?? StateError('Invoice data unavailable'),
+          onRetry: () => ref.invalidate(invoicesProvider),
+        ),
+      );
+    }
     if (invoice == null) {
       return const Scaffold(body: Center(child: Text('Invoice not found')));
     }
@@ -106,118 +127,137 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
-        children: [
-          _hero(invoice, status, total, balance, progress),
-          const SizedBox(height: 12),
-          _section(
-            'Invoice',
-            Column(
-              children: [
-                _row('Issue date', shortDate.format(invoice.issueDate)),
-                _row('Due date', shortDate.format(invoice.dueDate)),
-                _row('Customer', invoice.customerName),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          _section(
-            'Items',
-            Column(
-              children: [
-                for (final line in invoice.lines)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      line.description,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Text(
-                      '${line.quantity} × ${money.format(line.unitPrice)}${line.taxable ? ' • Taxable' : ''}',
-                    ),
-                    trailing: Text(
-                      money.format(line.total),
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          _section(
-            'Totals',
-            Column(
-              children: [
-                _row('Subtotal', money.format(invoice.subtotal)),
-                if (invoice.discount > 0)
-                  _row('Discount', '− ${money.format(invoice.discount)}'),
-                if (invoice.vatEnabled)
-                  _row(
-                    'VAT (${invoice.vatRate.toStringAsFixed(0)}%)',
-                    money.format(invoice.tax(invoice.vatRate)),
-                  ),
-                const Divider(),
-                _row('Total', money.format(total), bold: true),
-                _row('Paid', money.format(invoice.amountPaid)),
-                _row('Balance', money.format(balance), bold: true),
-              ],
-            ),
-          ),
-          if (invoice.notes.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _section('Notes', Text(invoice.notes)),
-          ],
-          const SizedBox(height: 12),
-          _section(
-            'Payments',
-            Column(
-              children: [
-                if (invoice.payments.isEmpty)
-                  const ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.payments_outlined),
-                    title: Text('No payments recorded'),
-                    subtitle: Text('Record a payment when your customer pays.'),
-                  ),
-                ...invoice.payments.map(
-                  (payment) => _paymentTile(invoice, payment, b),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed:
-                      balance <= 0.009 || status == InvoiceStatus.cancelled
-                      ? null
-                      : () => _recordPayment(invoice),
-                  icon: const Icon(Icons.add_card_outlined),
-                  label: const Text('Record payment'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1120),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: busy ? null : () => _preview(invoice, b),
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: const Text('PDF preview'),
+              _hero(invoice, status, total, balance, progress),
+              const SizedBox(height: 12),
+              _section(
+                'Invoice',
+                Column(
+                  children: [
+                    _row('Issue date', shortDate.format(invoice.issueDate)),
+                    _row('Due date', shortDate.format(invoice.dueDate)),
+                    _row('Customer', invoice.customerName),
+                  ],
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: busy
-                      ? null
-                      : () => ShareService.shareInvoice(invoice, b),
-                  icon: const Icon(Icons.share_outlined),
-                  label: const Text('Share'),
+              const SizedBox(height: 12),
+              _section(
+                'Items',
+                Column(
+                  children: [
+                    for (final line in invoice.lines)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          line.description,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(
+                          '${line.quantity} × ${money.format(line.unitPrice)}${line.taxable ? ' • Taxable' : ''}',
+                        ),
+                        trailing: Text(
+                          money.format(line.total),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 12),
+              _section(
+                'Totals',
+                Column(
+                  children: [
+                    _row('Subtotal', money.format(invoice.subtotal)),
+                    if (invoice.discount > 0)
+                      _row('Discount', '− ${money.format(invoice.discount)}'),
+                    if (invoice.vatEnabled)
+                      _row(
+                        'VAT (${invoice.vatRate.toStringAsFixed(0)}%)',
+                        money.format(invoice.tax(invoice.vatRate)),
+                      ),
+                    const Divider(),
+                    _row('Total', money.format(total), bold: true),
+                    _row('Paid', money.format(invoice.amountPaid)),
+                    _row('Balance', money.format(balance), bold: true),
+                  ],
+                ),
+              ),
+              if (invoice.notes.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _section('Notes', Text(invoice.notes)),
+              ],
+              const SizedBox(height: 12),
+              _section(
+                'Payments',
+                Column(
+                  children: [
+                    if (invoice.payments.isEmpty)
+                      const ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.payments_outlined),
+                        title: Text('No payments recorded'),
+                        subtitle: Text(
+                          'Record a payment when your customer pays.',
+                        ),
+                      ),
+                    ...invoice.payments.map(
+                      (payment) => _paymentTile(invoice, payment, b),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed:
+                          balance <= 0.009 || status == InvoiceStatus.cancelled
+                          ? null
+                          : () => _recordPayment(invoice),
+                      icon: const Icon(Icons.add_card_outlined),
+                      label: const Text('Record payment'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final previewButton = OutlinedButton.icon(
+                    onPressed: busy ? null : () => _preview(invoice, b),
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('PDF preview'),
+                  );
+                  final shareButton = FilledButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => ShareService.shareInvoice(invoice, b),
+                    icon: const Icon(Icons.share_outlined),
+                    label: const Text('Share'),
+                  );
+                  if (constraints.maxWidth < 420) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        previewButton,
+                        const SizedBox(height: 8),
+                        shareButton,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: previewButton),
+                      const SizedBox(width: 10),
+                      Expanded(child: shareButton),
+                    ],
+                  );
+                },
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -248,6 +288,8 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
               Expanded(
                 child: Text(
                   invoice.customerName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colors.onPrimary,
                     fontSize: 18,
@@ -259,12 +301,19 @@ class _InvoiceDetailsState extends ConsumerState<InvoiceDetailsScreen> {
             ],
           ),
           const SizedBox(height: 18),
-          Text(
-            money.format(total),
-            style: TextStyle(
-              color: colors.onPrimary,
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                money.format(total),
+                style: TextStyle(
+                  color: colors.onPrimary,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ),
           ),
           Text(

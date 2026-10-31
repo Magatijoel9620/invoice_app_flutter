@@ -5,6 +5,7 @@ import '../core/providers/payment_engine_billing_providers.dart';
 import '../core/providers/subscription_providers.dart';
 import '../domain/models/subscription_models.dart';
 import '../core/errors/app_error.dart';
+import 'widgets/skeleton_loader.dart';
 
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
@@ -52,8 +53,8 @@ class SubscriptionScreen extends ConsumerWidget {
             const SizedBox(height: 18),
             plans.when(
               loading: () => const Padding(
-                padding: EdgeInsets.all(30),
-                child: Center(child: CircularProgressIndicator()),
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: PlanLoadingState(),
               ),
               error: (error, _) => _ErrorCard(
                 message:
@@ -154,7 +155,13 @@ class SubscriptionScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 18),
             transactions.when(
-              loading: () => const SizedBox.shrink(),
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: RecordListLoadingState(
+                  rows: 2,
+                  showHeader: true,
+                ),
+              ),
               error: (_, __) => _ErrorCard(
                 message: 'Unable to load payment history. Please try again.',
                 onRetry: () => ref.invalidate(paymentTransactionsProvider),
