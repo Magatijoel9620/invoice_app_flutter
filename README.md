@@ -371,46 +371,61 @@ InvoiceEasy uses explicit production signing configuration for Android releases.
 4. Build the release bundle.
 
 ```bash
-flutter build appbundle --release
+flutter pub get
+flutter run   --dart-define=SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co   --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
-Debug signing fallback is intentionally disabled for release builds.
+Never put a Supabase secret key/service-role key in Flutter code or `--dart-define` values shipped to users.
 
-Before publishing, review:
+See `SUPABASE_SETUP.md` for the complete setup walkthrough.
 
-📋 [Release Checklist](docs/RELEASE_CHECKLIST.md)
+## V3.0 implementation status
 
----
+### V3.0.1 — Supabase foundation
+- Email/password authentication and persistent sessions
+- Account profile
+- One authenticated user -> one business
+- Cloud repositories/mapping
+- RLS and automatic profile creation
 
-## 📚 Documentation
+### V3.0.2 — Sync
+- Offline-first local writes
+- Account-scoped local storage
+- Persistent pending queue
+- Push/pull synchronization
+- Three-attempt transient retry
+- Last-write-wins conflict strategy
+- Cloud tombstones for deletes
+- First-login local/cloud bootstrap
 
-| Document | Description |
-|---|---|
-| [Supabase Setup](SUPABASE_SETUP.md) | Cloud configuration and deployment |
-| [Release Checklist](docs/RELEASE_CHECKLIST.md) | Production release preparation |
-| [Subscription Hardening](SUBSCRIPTION_HARDENING.md) | Subscription security and access control |
-| [Offline Connectivity](docs/offline_first_connectivity.md) | Connectivity and synchronization architecture |
+### V3.0.3 — Account
+- Account profile screen
+- Business data persisted through the cloud sync layer
+- Manual sync and status
+- Password reset
+- Sign out
+- Cloud account deletion through the Edge Function
 
----
+See `SUPABASE_SETUP.md` for deployment and migration instructions.
 
-## 🏢 Developed by Hempon Group
+## Subscription hardening (2.6)
 
-InvoiceEasy is part of the Hempon Group software portfolio — building practical digital solutions that simplify everyday business operations.
+InvoiceEasy now includes the Landlord Ledger-style subscription hardening adapted to its single-business architecture. The default plans are KSh 200/month and KSh 2,000/year, plus a 14-day trial. Subscription state and paid-write authorization are enforced in Supabase; the Flutter client cannot self-activate a subscription. See `SUBSCRIPTION_HARDENING.md` and migration `supabase/migrations/20260914_invoice_easy_subscription_hardening.sql`.
 
-🌐 Website: [www.hempongroup.co.ke](https://www.hempongroup.co.ke)
+## Offline-first connectivity
 
-📧 Email: hempongroup@gmail.com
+InvoiceEasy now includes a reusable connectivity and synchronization layer:
 
----
+- `ConnectivityService` detects transport plus actual HTTP reachability.
+- Connectivity is exposed through Riverpod.
+- Lifecycle resume and periodic reachability checks are supported.
+- The global sync banner shows checking/offline/syncing/pending/error states.
+- Returning online triggers automatic synchronization.
+- Local mutations automatically trigger sync when the app is online.
+- `SyncQueue` persists pending mutations and retry metadata.
+- Exponential retry/backoff and failed-operation visibility are supported.
+- Existing last-write-wins conflict resolution and cloud tombstones remain intact.
+- The app remains usable when the network is unavailable.
 
-<p align="center">
-  <strong>🧾 InvoiceEasy — Your Business. Better Organized.</strong>
-  <br/>
-  <sub>Built to simplify invoicing. Designed to support business growth.</sub>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Made%20with-Flutter-02569B?style=flat-square&logo=flutter" />
-  <img src="https://img.shields.io/badge/Powered%20by-Supabase-3FCF8E?style=flat-square&logo=supabase" />
-  <img src="https://img.shields.io/badge/By-Hempon%20Group-0F766E?style=flat-square" />
-</p>
+See `docs/offline_first_connectivity.md` for the architecture and Farmora
+porting notes.
